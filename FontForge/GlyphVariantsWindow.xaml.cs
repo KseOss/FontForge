@@ -298,7 +298,15 @@ namespace FontForge
             wrap.Child = btn;
             return wrap;
         }
+        private void MakeVariantDefault(Guid variantId)
+        {
+            if (_glyph == null) return;
 
+            foreach (var variant in _glyph.Variants)
+            {
+                variant.IsDefault = variant.Id == variantId;
+            }
+        }
         private void AddVariant_Click(object sender, RoutedEventArgs e)
         {
             if (_font == null || _glyph == null) return;
@@ -306,18 +314,25 @@ namespace FontForge
             var variant = new GlyphVariant
             {
                 Id = Guid.NewGuid(),
-                IsDefault = _glyph.Variants.Count == 0, // первый автоматически используется
+                IsDefault = false,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
 
             var editor = new GlyphEditorWindow(_font.Id, _ch, variant.Id) { Owner = this };
+
             if (editor.ShowDialog() == true)
             {
                 variant.ImagePath = editor.SavedImagePath ?? "";
                 variant.UpdatedAt = DateTime.Now;
 
                 _glyph.Variants.Add(variant);
+
+                // ВАЖНО:
+                // новый нарисованный вариант сразу становится тем,
+                // который используется в шрифте, предпросмотре и PDF
+                MakeVariantDefault(variant.Id);
+
                 _glyph.UpdatedAt = DateTime.Now;
 
                 FontStorage.NormalizeDefaults(_font, _ch);
@@ -337,12 +352,19 @@ namespace FontForge
             if (v == null) return;
 
             var editor = new GlyphEditorWindow(_font.Id, _ch, v.Id) { Owner = this };
+
             if (editor.ShowDialog() == true)
             {
                 v.ImagePath = editor.SavedImagePath ?? v.ImagePath;
                 v.UpdatedAt = DateTime.Now;
+
+                // ВАЖНО:
+                // отредактированный вариант сразу становится основным
+                MakeVariantDefault(v.Id);
+
                 _glyph.UpdatedAt = DateTime.Now;
 
+                FontStorage.NormalizeDefaults(_font, _ch);
                 SaveAll();
                 Build();
             }

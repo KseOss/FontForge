@@ -112,7 +112,9 @@
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="16"/>
-            <Setter Property="Background" Value="#0D000000"/>
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
         <!-- ===== Плитка символа ===== -->
@@ -220,8 +222,11 @@
                     <TextBlock Text="Размер шрифта предпросмотра"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <Slider x:Name="PreviewSizeSlider"
-                            Minimum="18" Maximum="90" Value="46"
-                            ValueChanged="PreviewSizeSlider_ValueChanged"/>
+                        Style="{StaticResource AppSlider}"
+                        Minimum="18"
+                        Maximum="90"
+                        Value="46"
+                        ValueChanged="PreviewSizeSlider_ValueChanged"/>
                 </StackPanel>
 
                 <!-- Ввод + Очистить -->
@@ -235,16 +240,18 @@
                         <TextBlock Text="Введите текст для проверки"
                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                         <TextBox x:Name="PreviewInput"
-                                 Margin="0,8,12,0"
-                                 Height="40"
-                                 FontSize="14"
-                                 VerticalContentAlignment="Center"
-                                 Background="#0A000000"
-                                 Foreground="{DynamicResource TextBrush}"
-                                 BorderThickness="0"
-                                 Padding="12,0"
-                                 TextChanged="PreviewInput_TextChanged"
-                                 Text="АБВГДЕ ЁЖЗИЙКЛМНОП РСТУФХЦЧШЩЪЫЬЭЮЯ"/>
+                            Margin="0,8,12,0"
+                            Height="40"
+                             FontSize="14"
+                            VerticalContentAlignment="Center"
+                            Background="{DynamicResource InputBackgroundBrush}"
+                            Foreground="{DynamicResource TextBrush}"
+                            CaretBrush="{DynamicResource TextBrush}"
+                            BorderBrush="{DynamicResource MutedBorderBrush}"
+                            BorderThickness="1"
+                            Padding="12,0"
+                            TextChanged="PreviewInput_TextChanged"
+                            Text="АБВГДЕ ЁЖЗИЙКЛМНОП РСТУФХЦЧШЩЪЫЬЭЮЯ"/>
                     </StackPanel>
 
                     <Button Grid.Column="1"
@@ -256,12 +263,12 @@
 
                 <!-- Рендер предпросмотра -->
                 <Border Grid.Row="3"
-                        Margin="0,14,0,0"
-                        CornerRadius="14"
-                        Background="#06FFFFFF"
-                        BorderBrush="#12000000"
-                        BorderThickness="1"
-                        Padding="12">
+                    Margin="0,14,0,0"
+                    CornerRadius="14"
+                    Background="{DynamicResource PreviewBackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    Padding="12">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Disabled">
                         <WrapPanel x:Name="PreviewRenderPanel"

@@ -36,6 +36,7 @@ namespace FontForge
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             LoadFont();
+            SetPreviewInputTextFromCreatedGlyphsIfNeeded();
             RefreshGlyphTiles();
             RebuildPreview();
         }
@@ -45,7 +46,10 @@ namespace FontForge
             App.ThemeChanged -= OnThemeChanged;
         }
 
-        private void Back_Click(object sender, RoutedEventArgs e) => Close();
+        private void Back_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
 
         private void OnThemeChanged()
         {
@@ -54,7 +58,9 @@ namespace FontForge
 
         private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_isThemeAnimating) return;
+            if (_isThemeAnimating)
+                return;
+
             _isThemeAnimating = true;
             ThemeToggleButton.IsEnabled = false;
 
@@ -62,11 +68,13 @@ namespace FontForge
             bool wantDark = !wantLight;
 
             var fadeTo = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140));
+
             fadeTo.Completed += (_, __) =>
             {
                 App.SetTheme(wantDark);
 
                 var fadeBack = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(180));
+
                 fadeBack.Completed += (___, ____) =>
                 {
                     ThemeToggleButton.IsEnabled = true;
@@ -93,38 +101,46 @@ namespace FontForge
 
             FontNameText.Text = _font.Name;
 
-            foreach (var g in _font.Glyphs)
-                FontStorage.NormalizeDefaults(_font, g.Char);
+            foreach (var glyph in _font.Glyphs)
+                FontStorage.NormalizeDefaults(_font, glyph.Char);
 
             SaveFont();
         }
 
         private void SaveFont()
         {
-            if (_font == null) return;
+            if (_font == null)
+                return;
 
-            var idx = _allFonts.FindIndex(f => f.Id == _font.Id);
-            if (idx >= 0) _allFonts[idx] = _font;
+            int idx = _allFonts.FindIndex(f => f.Id == _font.Id);
+
+            if (idx >= 0)
+                _allFonts[idx] = _font;
 
             FontStorage.SaveFonts(_allFonts);
         }
 
-        // ===== Плитки символов =====
         private void RefreshGlyphTiles()
         {
             Glyphs.Clear();
-            if (_font == null) return;
 
-            foreach (var g in _font.Glyphs.OrderBy(x => x.Char))
+            if (_font == null)
+                return;
+
+            foreach (var glyph in _font.Glyphs.OrderBy(x => x.Char, StringComparer.Ordinal))
             {
-                var def = g.Variants.FirstOrDefault(v => v.IsDefault) ?? g.Variants.FirstOrDefault();
-                bool isDefaultExists = def != null && def.IsDefault;
+                string imagePath = GlyphImageResolver.FindGlyphImagePath(
+                    _font,
+                    glyph.Char,
+                    allowLookAlikeFallback: false) ?? "";
+
+                bool hasDefaultVariant = glyph.Variants.Any(v => v.IsDefault);
 
                 Glyphs.Add(new GlyphTileVm
                 {
-                    Char = g.Char,
-                    DefaultImagePath = def?.ImagePath ?? "",
-                    IsDefault = isDefaultExists
+                    Char = glyph.Char,
+                    DefaultImagePath = imagePath,
+                    IsDefault = hasDefaultVariant
                 });
             }
 
@@ -133,24 +149,31 @@ namespace FontForge
 
         private void AddGlyph_Click(object sender, RoutedEventArgs e)
         {
-            if (_font == null) return;
+            if (_font == null)
+                return;
 
             var used = new HashSet<string>(_font.Glyphs.Select(g => g.Char));
             var dlg = new SelectLetterDialog(used) { Owner = this };
-            if (dlg.ShowDialog() != true) return;
+
+            if (dlg.ShowDialog() != true)
+                return;
 
             string selected = dlg.SelectedChar ?? "";
-            if (string.IsNullOrWhiteSpace(selected)) return;
+
+            if (string.IsNullOrWhiteSpace(selected))
+                return;
 
             var entry = new GlyphEntry
             {
                 Char = selected,
                 UpdatedAt = DateTime.Now
             };
+
             _font.Glyphs.Add(entry);
 
             SaveFont();
             RefreshGlyphTiles();
+            SetPreviewInputTextFromCreatedGlyphsIfNeeded();
             RebuildPreview();
 
             OpenVariants(selected);
@@ -158,27 +181,36 @@ namespace FontForge
 
         private void GlyphTile_Click(object sender, RoutedEventArgs e)
         {
-            if (_font == null) return;
+            if (_font == null)
+                return;
 
-            if (sender is Button b && b.DataContext is GlyphTileVm vm)
+            if (sender is Button button && button.DataContext is GlyphTileVm vm)
                 OpenVariants(vm.Char);
         }
 
         private void OpenVariants(string ch)
         {
-            if (_font == null) return;
+            if (_font == null)
+                return;
 
             var win = new GlyphVariantsWindow(_font.Id, ch) { Owner = this };
             win.ShowDialog();
 
             LoadFont();
+            SetPreviewInputTextFromCreatedGlyphsIfNeeded();
             RefreshGlyphTiles();
             RebuildPreview();
         }
 
-        // ===== Предпросмотр =====
-        private void PreviewInput_TextChanged(object sender, TextChangedEventArgs e) => RebuildPreview();
-        private void PreviewSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => RebuildPreview();
+        private void PreviewInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            RebuildPreview();
+        }
+
+        private void PreviewSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            RebuildPreview();
+        }
 
         private void RebuildPreview()
         {
@@ -186,75 +218,167 @@ namespace FontForge
                 return;
 
             PreviewRenderPanel.Children.Clear();
-            if (_font == null) return;
+
+            if (_font == null)
+                return;
 
             string text = PreviewInput.Text ?? "";
             double size = PreviewSizeSlider.Value;
 
-            foreach (char ch in text)
+            var root = new StackPanel
             {
-                string s = ch.ToString();
+                Orientation = Orientation.Vertical
+            };
 
-                if (ch == ' ')
+            string[] lines = SplitLines(text);
+
+            foreach (string line in lines)
+            {
+                var linePanel = new WrapPanel
                 {
-                    PreviewRenderPanel.Children.Add(new Border { Width = size * 0.35 });
+                    Margin = new Thickness(0, 0, 0, size * 0.20)
+                };
+
+                if (line.Length == 0)
+                {
+                    root.Children.Add(new Border
+                    {
+                        Height = size * 0.8
+                    });
+
                     continue;
                 }
 
-                var glyph = _font.Glyphs.FirstOrDefault(g => g.Char == s);
-                var variant = glyph?.Variants.FirstOrDefault(v => v.IsDefault) ?? glyph?.Variants.FirstOrDefault();
-                string path = variant?.ImagePath ?? "";
-
-                if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                foreach (char ch in line)
                 {
-                    var img = new Image
+                    if (ch == ' ')
                     {
-                        Width = size,
-                        Height = size,
-                        Stretch = Stretch.Uniform,
-                        Margin = new Thickness(2, 0, 2, 0),
-                    };
+                        linePanel.Children.Add(new Border
+                        {
+                            Width = size * 0.45,
+                            Height = size
+                        });
 
-                    try
-                    {
-                        img.Source = LoadBitmapNoLock(path);
-                        PreviewRenderPanel.Children.Add(img);
+                        continue;
                     }
-                    catch
+
+                    if (ch == '\t')
                     {
-                        PreviewRenderPanel.Children.Add(MakeFallbackText(s, size));
+                        linePanel.Children.Add(new Border
+                        {
+                            Width = size * 1.5,
+                            Height = size
+                        });
+
+                        continue;
+                    }
+
+                    string symbol = ch.ToString();
+                    string? imagePath = GlyphImageResolver.FindGlyphImagePath(_font, symbol);
+
+                    if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
+                    {
+                        linePanel.Children.Add(CreatePngGlyphPreviewOrFallback(symbol, imagePath, size));
+                    }
+                    else
+                    {
+                        linePanel.Children.Add(CreateFallbackText(symbol, size));
                     }
                 }
-                else
+
+                root.Children.Add(linePanel);
+            }
+
+            PreviewRenderPanel.Children.Add(root);
+        }
+
+        private static FrameworkElement CreatePngGlyphPreviewOrFallback(string symbol, string imagePath, double size)
+        {
+            try
+            {
+                var border = new Border
                 {
-                    PreviewRenderPanel.Children.Add(MakeFallbackText(s, size));
-                }
+                    Width = size,
+                    Height = size,
+                    Margin = new Thickness(2, 0, 2, 0),
+                    Background = Brushes.Transparent,
+                    ToolTip = $"Символ: {symbol}\nPNG:\n{imagePath}"
+                };
+
+                var image = new Image
+                {
+                    Source = LoadBitmapForPreview(imagePath),
+                    Stretch = Stretch.Uniform,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Center
+                };
+
+                RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
+
+                border.Child = image;
+                return border;
+            }
+            catch
+            {
+                return CreateFallbackText(symbol, size);
             }
         }
 
-        private static BitmapSource LoadBitmapNoLock(string path)
-        {
-            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.OnLoad;
-            bmp.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
-            bmp.StreamSource = fs;
-            bmp.EndInit();
-            bmp.Freeze();
-            return bmp;
-        }
-
-        private TextBlock MakeFallbackText(string s, double size)
+        private static TextBlock CreateFallbackText(string symbol, double size)
         {
             return new TextBlock
             {
-                Text = s,
-                FontSize = size,
-                Foreground = (Brush)Application.Current.Resources["TextBrush"],
-                Margin = new Thickness(2, 0, 2, 0)
+                Text = symbol,
+                FontSize = size * 0.72,
+                Foreground = (Brush)Application.Current.Resources["PreviewTextBrush"],
+                Margin = new Thickness(2, 0, 2, 0),
+                VerticalAlignment = System.Windows.VerticalAlignment.Center
             };
+        }
+
+        private static BitmapSource LoadBitmapForPreview(string path)
+        {
+            var bmp = new BitmapImage();
+
+            bmp.BeginInit();
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+            bmp.UriSource = new Uri(path, UriKind.Absolute);
+            bmp.EndInit();
+            bmp.Freeze();
+
+            return bmp;
+        }
+
+        private static string[] SplitLines(string text)
+        {
+            return (text ?? "")
+                .Replace("\r\n", "\n")
+                .Replace('\r', '\n')
+                .Split('\n');
+        }
+
+        private void SetPreviewInputTextFromCreatedGlyphsIfNeeded()
+        {
+            if (_font == null || PreviewInput == null)
+                return;
+
+            string current = PreviewInput.Text ?? "";
+
+            bool shouldReplace =
+                string.IsNullOrWhiteSpace(current)
+                || current.Contains("АБВГДЕ", StringComparison.Ordinal)
+                || current.StartsWith("Символы вашего шрифта:", StringComparison.Ordinal);
+
+            if (!shouldReplace)
+                return;
+
+            var chars = GlyphImageResolver.GetDrawableChars(_font);
+
+            if (chars.Count == 0)
+                return;
+
+            PreviewInput.Text = string.Join(" ", chars);
         }
 
         private void ClearText_Click(object sender, RoutedEventArgs e)
@@ -263,7 +387,6 @@ namespace FontForge
             RebuildPreview();
         }
 
-        // ✅ ОТДЕЛЬНОЕ ОКНО “как Word” + PDF
         private void OpenDocumentEditor_Click(object sender, RoutedEventArgs e)
         {
             if (_font == null)
@@ -276,6 +399,7 @@ namespace FontForge
             {
                 Owner = this
             };
+
             win.ShowDialog();
         }
     }
