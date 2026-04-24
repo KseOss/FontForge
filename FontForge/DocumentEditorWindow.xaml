@@ -7,7 +7,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanMinimize"
         Background="{DynamicResource BackgroundBrush}"
-        Icon="/Images/Untitled.png"
+        Icon="/Images/Logo.png"
         Loaded="Window_Loaded">
 
     <Grid Margin="24">

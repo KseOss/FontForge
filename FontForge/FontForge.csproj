@@ -11,7 +11,6 @@
   <ItemGroup>
     <None Remove="Images\1 слой.png" />
     <None Remove="Images\Group 1.png" />
-    <None Remove="Images\Untitled.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,7 +22,7 @@
   <ItemGroup>
     <Resource Include="Images\1 слой.png" />
     <Resource Include="Images\Group 1.png" />
-    <Resource Include="Images\Untitled.png" />
+    <Resource Include="Images\Logo.png" />
   </ItemGroup>
 
 </Project>

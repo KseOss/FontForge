@@ -6,7 +6,7 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}"
-        Icon="/Images/Untitled.png"
+        Icon="/Images/Logo.png"
         Loaded="Window_Loaded"
         Closed="Window_Closed">
 
@@ -226,7 +226,7 @@
                         Minimum="18"
                         Maximum="90"
                         Value="46"
-                        ValueChanged="PreviewSizeSlider_ValueChanged"/>
+                    ValueChanged="PreviewSizeSlider_ValueChanged"/>
                 </StackPanel>
 
                 <!-- Ввод + Очистить -->

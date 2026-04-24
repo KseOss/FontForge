@@ -10,7 +10,7 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}"
-        Icon="/Images/Untitled.png">
+        Icon="/Images/Logo.png">
 
     <Window.Resources>
 

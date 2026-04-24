@@ -13,7 +13,11 @@ namespace FontForge
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
             ApplyCurrentTheme();
+
+            var splash = new SplashWindow();
+            splash.Show();
         }
 
         public static void SetTheme(bool dark)
@@ -66,6 +70,7 @@ namespace FontForge
             SetBrush("ButtonTextBrush", $"{prefix}ButtonTextBrush");
 
             SetBrush("SecondaryButtonBackgroundBrush", $"{prefix}SecondaryButtonBackgroundBrush");
+            SetBrush("SecondaryButtonHoverBrush", $"{prefix}SecondaryButtonHoverBrush");
             SetBrush("SecondaryButtonTextBrush", $"{prefix}SecondaryButtonTextBrush");
 
             SetBrush("DangerBrush", $"{prefix}DangerBrush");
