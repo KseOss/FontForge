@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Images\1 слой.png" />
+    <None Remove="Images\Group 1.png" />
+    <None Remove="Images\Untitled.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2025.12.1" />
+    <PackageReference Include="Typography.OpenFont.NetCore" Version="1.0.0" />
+    <PackageReference Include="WycliffeAssociates.Typography.OpenFont" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\1 слой.png" />
+    <Resource Include="Images\Group 1.png" />
+    <Resource Include="Images\Untitled.png" />
+  </ItemGroup>
+
+</Project>
