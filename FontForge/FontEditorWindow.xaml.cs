@@ -1,4 +1,5 @@
 ﻿using FontForge.Classes;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -54,6 +55,7 @@ namespace FontForge
         private void OnThemeChanged()
         {
             ThemeToggleButton.IsChecked = !App.IsDarkTheme;
+            RebuildPreview();
         }
 
         private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
@@ -101,8 +103,11 @@ namespace FontForge
 
             FontNameText.Text = _font.Name;
 
-            foreach (var glyph in _font.Glyphs)
-                FontStorage.NormalizeDefaults(_font, glyph.Char);
+            if (_font.Glyphs != null)
+            {
+                foreach (var glyph in _font.Glyphs)
+                    FontStorage.NormalizeDefaults(_font, glyph.Char);
+            }
 
             SaveFont();
         }
@@ -124,7 +129,7 @@ namespace FontForge
         {
             Glyphs.Clear();
 
-            if (_font == null)
+            if (_font == null || _font.Glyphs == null)
                 return;
 
             foreach (var glyph in _font.Glyphs.OrderBy(x => x.Char, StringComparer.Ordinal))
@@ -134,7 +139,7 @@ namespace FontForge
                     glyph.Char,
                     allowLookAlikeFallback: false) ?? "";
 
-                bool hasDefaultVariant = glyph.Variants.Any(v => v.IsDefault);
+                bool hasDefaultVariant = glyph.Variants != null && glyph.Variants.Any(v => v.IsDefault);
 
                 Glyphs.Add(new GlyphTileVm
                 {
@@ -193,7 +198,11 @@ namespace FontForge
             if (_font == null)
                 return;
 
-            var win = new GlyphVariantsWindow(_font.Id, ch) { Owner = this };
+            var win = new GlyphVariantsWindow(_font.Id, ch)
+            {
+                Owner = this
+            };
+
             win.ShowDialog();
 
             LoadFont();
@@ -309,8 +318,8 @@ namespace FontForge
                 {
                     Source = LoadBitmapForPreview(imagePath),
                     Stretch = Stretch.Uniform,
-                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                    VerticalAlignment = System.Windows.VerticalAlignment.Center
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
                 };
 
                 RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
@@ -330,10 +339,28 @@ namespace FontForge
             {
                 Text = symbol,
                 FontSize = size * 0.72,
-                Foreground = (Brush)Application.Current.Resources["PreviewTextBrush"],
+                Foreground = GetPreviewTextBrush(),
                 Margin = new Thickness(2, 0, 2, 0),
-                VerticalAlignment = System.Windows.VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center
             };
+        }
+
+        private static Brush GetPreviewTextBrush()
+        {
+            try
+            {
+                if (Application.Current.Resources.Contains("PreviewTextBrush") &&
+                    Application.Current.Resources["PreviewTextBrush"] is Brush brush)
+                {
+                    return brush;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return Brushes.Black;
         }
 
         private static BitmapSource LoadBitmapForPreview(string path)
@@ -385,6 +412,81 @@ namespace FontForge
         {
             PreviewInput.Clear();
             RebuildPreview();
+        }
+
+        private void ExportFontFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (_font == null)
+            {
+                MessageBox.Show(
+                    "Шрифт не загружен.",
+                    "Экспорт шрифта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            LoadFont();
+
+            if (_font == null)
+                return;
+
+            var sfd = new SaveFileDialog
+            {
+                Title = "Сохранить шрифт",
+                Filter = "TrueType Font (*.ttf)|*.ttf|OpenType Font (*.otf)|*.otf",
+                FileName = BuildSafeFontFileName(_font.Name) + ".ttf",
+                DefaultExt = ".ttf",
+                AddExtension = true
+            };
+
+            if (sfd.ShowDialog() != true)
+                return;
+
+            try
+            {
+                FontExportResult result = TrueTypeFontExporter.Export(_font, sfd.FileName);
+
+                string message =
+                    "Шрифт успешно сохранён.\n\n" +
+                    $"Экспортировано символов: {result.ExportedGlyphCount}";
+
+                if (result.SkippedGlyphCount > 0)
+                {
+                    message +=
+                        "\nПропущено символов: " + result.SkippedGlyphCount +
+                        "\n\nНекоторые символы могли быть пропущены, если у них не найден .isf-файл с контурами.";
+                }
+
+                MessageBox.Show(
+                    message,
+                    "Экспорт шрифта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Ошибка при экспорте шрифта:\n" + ex.Message,
+                    "Экспорт шрифта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private static string BuildSafeFontFileName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return "MyFont";
+
+            string safe = name;
+
+            foreach (char c in Path.GetInvalidFileNameChars())
+                safe = safe.Replace(c, '_');
+
+            return string.IsNullOrWhiteSpace(safe)
+                ? "MyFont"
+                : safe;
         }
 
         private void OpenDocumentEditor_Click(object sender, RoutedEventArgs e)
