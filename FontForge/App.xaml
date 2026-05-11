@@ -4,86 +4,7 @@
 
     <Application.Resources>
 
-        <!-- ========================================================= -->
-        <!--                        LIGHT THEME                        -->
-        <!-- ========================================================= -->
-
-        <SolidColorBrush x:Key="LightBackgroundBrush" Color="#F7F8FB"/>
-        <SolidColorBrush x:Key="LightSurfaceBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="LightSurfaceAltBrush" Color="#F1F2F5"/>
-        <SolidColorBrush x:Key="LightCardBrush" Color="#EEF0F3"/>
-        <SolidColorBrush x:Key="LightInputBackgroundBrush" Color="#E9EAEE"/>
-
-        <!-- Лист предпросмотра всегда светлый, чтобы PNG-буквы были видны -->
-        <SolidColorBrush x:Key="LightPreviewBackgroundBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="LightPreviewTextBrush" Color="#101114"/>
-
-        <SolidColorBrush x:Key="LightTextBrush" Color="#101114"/>
-        <SolidColorBrush x:Key="LightSecondaryTextBrush" Color="#667085"/>
-
-        <SolidColorBrush x:Key="LightBorderBrush" Color="#D6DAE2"/>
-        <SolidColorBrush x:Key="LightMutedBorderBrush" Color="#E4E7EC"/>
-
-        <!-- Кнопки в светлой теме: чёрные / тёмно-серые -->
-        <SolidColorBrush x:Key="LightButtonBackgroundBrush" Color="#2F2F2F"/>
-        <SolidColorBrush x:Key="LightButtonHoverBrush" Color="#1F1F1F"/>
-        <SolidColorBrush x:Key="LightButtonTextBrush" Color="#FFFFFF"/>
-
-        <SolidColorBrush x:Key="LightSecondaryButtonBackgroundBrush" Color="#E4E7EC"/>
-        <SolidColorBrush x:Key="LightSecondaryButtonHoverBrush" Color="#D7DBE2"/>
-        <SolidColorBrush x:Key="LightSecondaryButtonTextBrush" Color="#101114"/>
-
-        <!-- Без красного/голубого: опасные кнопки тоже серые -->
-        <SolidColorBrush x:Key="LightDangerBrush" Color="#3A3A3A"/>
-        <SolidColorBrush x:Key="LightDangerHoverBrush" Color="#242424"/>
-        <SolidColorBrush x:Key="LightDangerTextBrush" Color="#FFFFFF"/>
-
-        <!-- Акцент светлой темы: тёмно-серый, не голубой -->
-        <SolidColorBrush x:Key="LightAccentBrush" Color="#2F2F2F"/>
-
-
-        <!-- ========================================================= -->
-        <!--                         DARK THEME                        -->
-        <!-- ========================================================= -->
-
-        <SolidColorBrush x:Key="DarkBackgroundBrush" Color="#101217"/>
-        <SolidColorBrush x:Key="DarkSurfaceBrush" Color="#171A21"/>
-        <SolidColorBrush x:Key="DarkSurfaceAltBrush" Color="#20242D"/>
-        <SolidColorBrush x:Key="DarkCardBrush" Color="#1B1F27"/>
-        <SolidColorBrush x:Key="DarkInputBackgroundBrush" Color="#252A34"/>
-
-        <!-- В тёмной теме лист предпросмотра тоже остаётся белым -->
-        <SolidColorBrush x:Key="DarkPreviewBackgroundBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="DarkPreviewTextBrush" Color="#101114"/>
-
-        <SolidColorBrush x:Key="DarkTextBrush" Color="#F4F6FA"/>
-        <SolidColorBrush x:Key="DarkSecondaryTextBrush" Color="#AAB2C0"/>
-
-        <SolidColorBrush x:Key="DarkBorderBrush" Color="#343B49"/>
-        <SolidColorBrush x:Key="DarkMutedBorderBrush" Color="#2A303B"/>
-
-        <!-- Кнопки в тёмной теме: светло-серые, не голубые -->
-        <SolidColorBrush x:Key="DarkButtonBackgroundBrush" Color="#E5E7EB"/>
-        <SolidColorBrush x:Key="DarkButtonHoverBrush" Color="#D1D5DB"/>
-        <SolidColorBrush x:Key="DarkButtonTextBrush" Color="#101114"/>
-
-        <SolidColorBrush x:Key="DarkSecondaryButtonBackgroundBrush" Color="#252A34"/>
-        <SolidColorBrush x:Key="DarkSecondaryButtonHoverBrush" Color="#303744"/>
-        <SolidColorBrush x:Key="DarkSecondaryButtonTextBrush" Color="#F4F6FA"/>
-
-        <!-- Опасные кнопки в тёмной теме тоже серые -->
-        <SolidColorBrush x:Key="DarkDangerBrush" Color="#C8CDD4"/>
-        <SolidColorBrush x:Key="DarkDangerHoverBrush" Color="#E5E7EB"/>
-        <SolidColorBrush x:Key="DarkDangerTextBrush" Color="#101114"/>
-
-        <!-- Акцент тёмной темы: светло-серый, не голубой -->
-        <SolidColorBrush x:Key="DarkAccentBrush" Color="#D1D5DB"/>
-
-
-        <!-- ========================================================= -->
-        <!--                     CURRENT ACTIVE BRUSHES                -->
-        <!-- ========================================================= -->
-
+        <!-- Активные кисти приложения -->
         <SolidColorBrush x:Key="BackgroundBrush" Color="#F7F8FB"/>
         <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F1F2F5"/>
@@ -113,11 +34,7 @@
 
         <SolidColorBrush x:Key="AccentBrush" Color="#2F2F2F"/>
 
-
-        <!-- ========================================================= -->
-        <!--                         COMMON STYLES                     -->
-        <!-- ========================================================= -->
-
+        <!-- Общая карточка -->
         <Style x:Key="AppCard" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="16"/>
@@ -126,6 +43,7 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
+        <!-- Панель предпросмотра -->
         <Style x:Key="AppPreviewPanel" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="0"/>
@@ -134,6 +52,7 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
+        <!-- Тексты -->
         <Style x:Key="AppTitleText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="24"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -151,6 +70,7 @@
             <Setter Property="FontSize" Value="13"/>
         </Style>
 
+        <!-- Основная кнопка -->
         <Style x:Key="AppPrimaryButton" TargetType="Button">
             <Setter Property="Height" Value="44"/>
             <Setter Property="Padding" Value="18,0"/>
@@ -159,6 +79,8 @@
             <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -166,7 +88,8 @@
                                 CornerRadius="22"
                                 Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
                         </Border>
 
                         <ControlTemplate.Triggers>
@@ -175,7 +98,7 @@
                             </Trigger>
 
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.85"/>
+                                <Setter TargetName="Root" Property="Opacity" Value="0.82"/>
                             </Trigger>
 
                             <Trigger Property="IsEnabled" Value="False">
@@ -187,6 +110,7 @@
             </Setter>
         </Style>
 
+        <!-- Вторичная кнопка -->
         <Style x:Key="AppSecondaryButton" TargetType="Button">
             <Setter Property="Height" Value="44"/>
             <Setter Property="Padding" Value="18,0"/>
@@ -196,6 +120,8 @@
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -205,7 +131,8 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
                         </Border>
 
                         <ControlTemplate.Triggers>
@@ -226,6 +153,7 @@
             </Setter>
         </Style>
 
+        <!-- Опасная кнопка -->
         <Style x:Key="AppDangerButton" TargetType="Button">
             <Setter Property="Height" Value="44"/>
             <Setter Property="Padding" Value="18,0"/>
@@ -241,7 +169,8 @@
                                 CornerRadius="14"
                                 Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
                         </Border>
 
                         <ControlTemplate.Triggers>
@@ -250,7 +179,7 @@
                             </Trigger>
 
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.85"/>
+                                <Setter TargetName="Root" Property="Opacity" Value="0.82"/>
                             </Trigger>
 
                             <Trigger Property="IsEnabled" Value="False">
@@ -262,6 +191,7 @@
             </Setter>
         </Style>
 
+        <!-- TextBox -->
         <Style x:Key="AppTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
@@ -273,6 +203,7 @@
             <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}"/>
         </Style>
 
+        <!-- ComboBoxItem -->
         <Style x:Key="AppComboBoxItem" TargetType="{x:Type ComboBoxItem}">
             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -299,7 +230,7 @@
                             </Trigger>
 
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource ButtonBackgroundBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
                             </Trigger>
 
@@ -312,6 +243,7 @@
             </Setter>
         </Style>
 
+        <!-- ComboBox -->
         <Style x:Key="AppComboBox" TargetType="{x:Type ComboBox}">
             <Setter Property="Height" Value="38"/>
             <Setter Property="MinHeight" Value="38"/>
@@ -375,8 +307,7 @@
                                         Background="{DynamicResource SurfaceBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1"
-                                        CornerRadius="12"
-                                        SnapsToDevicePixels="True">
+                                        CornerRadius="12">
                                     <ScrollViewer Margin="4"
                                                   VerticalScrollBarVisibility="Auto"
                                                   HorizontalScrollBarVisibility="Disabled">
@@ -408,6 +339,7 @@
             </Setter>
         </Style>
 
+        <!-- Slider -->
         <Style x:Key="AppSlider" TargetType="{x:Type Slider}">
             <Setter Property="Height" Value="32"/>
             <Setter Property="Margin" Value="0,6,0,0"/>
@@ -487,12 +419,6 @@
                                 </Track.Thumb>
                             </Track>
                         </Grid>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.45"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

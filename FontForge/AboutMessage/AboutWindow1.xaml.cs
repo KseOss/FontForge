@@ -24,10 +24,7 @@ namespace FontForge.AboutMessage
             NavigateTo(new AboutWindow2());
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            FadeClose();
-        }
+       
 
         private void NavigateTo(Window next)
         {

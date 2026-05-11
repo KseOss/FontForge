@@ -210,11 +210,7 @@
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
             </StackPanel>
 
-            <ToggleButton x:Name="ThemeToggleButton"
-                          Grid.Column="1"
-                          Style="{StaticResource ThemeToggleSwitchStyle}"
-                          VerticalAlignment="Top"
-                          Click="ThemeToggleButton_Click"/>
+            
         </Grid>
 
         <Border Grid.Row="1"

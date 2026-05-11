@@ -30,7 +30,6 @@ namespace FontForge
 
             _fontId = fontId;
 
-            ThemeToggleButton.IsChecked = !App.IsDarkTheme;
             App.ThemeChanged += OnThemeChanged;
         }
 
@@ -54,7 +53,6 @@ namespace FontForge
 
         private void OnThemeChanged()
         {
-            ThemeToggleButton.IsChecked = !App.IsDarkTheme;
             RebuildPreview();
         }
 
@@ -64,22 +62,16 @@ namespace FontForge
                 return;
 
             _isThemeAnimating = true;
-            ThemeToggleButton.IsEnabled = false;
 
-            bool wantLight = ThemeToggleButton.IsChecked == true;
-            bool wantDark = !wantLight;
 
             var fadeTo = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140));
 
             fadeTo.Completed += (_, __) =>
             {
-                App.SetTheme(wantDark);
-
                 var fadeBack = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(180));
 
                 fadeBack.Completed += (___, ____) =>
                 {
-                    ThemeToggleButton.IsEnabled = true;
                     _isThemeAnimating = false;
                 };
 

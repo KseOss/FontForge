@@ -110,10 +110,7 @@
                        VerticalAlignment="Center"/>
 
             <!-- ВАЖНО: IsChecked = !IsDarkTheme (как у тебя в FontsWindow) -->
-            <ToggleButton x:Name="ThemeToggleButton"
-                          Grid.Column="1"
-                          Style="{StaticResource ThemeToggleSwitchStyle}"
-                          Click="ThemeToggleButton_Click"/>
+            
         </Grid>
 
         <TextBlock Grid.Row="1"

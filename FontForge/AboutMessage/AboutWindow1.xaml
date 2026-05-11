@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="О программе"
-        Height="327" Width="503"
+        Height="327" Width="540"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}"
@@ -58,12 +58,7 @@
     </Window.Resources>
 
     <Grid Margin="18">
-        <!-- Крестик -->
-        <Button Style="{StaticResource IconButtonStyle}"
-                Content="✕"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Click="CloseButton_Click"/>
+       
 
         <!-- Заголовок -->
         <TextBlock Text="Создавай шрифт из шаблона"

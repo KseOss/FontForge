@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 
 namespace FontForge
@@ -16,6 +17,8 @@ namespace FontForge
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            PrepareGlowColors();
+            StartSoftGlowAnimation();
             PlayIntroAnimation();
 
             await SetLoadingStep(
@@ -62,7 +65,7 @@ namespace FontForge
 
             await SetLoadingStep(
                 "Синхронизация темы оформления...",
-                "Применение светлой и тёмной палитры",
+                "Применение выбранной палитры и фона",
                 89,
                 1400);
 
@@ -87,6 +90,109 @@ namespace FontForge
             AnimateTextChange();
 
             await Task.Delay(delayMilliseconds);
+        }
+
+        private void PrepareGlowColors()
+        {
+            bool dark = App.IsDarkTheme;
+
+            Color accent = GetResourceColor(
+                "AccentBrush",
+                dark ? "#D1D5DB" : "#2F2F2F");
+
+            Color glowOne = Mix(
+                accent,
+                dark ? ColorFromHex("#FFFFFF") : ColorFromHex("#FFFFFF"),
+                dark ? 0.18 : 0.45);
+
+            Color glowTwo = Mix(
+                accent,
+                dark ? ColorFromHex("#FFFFFF") : ColorFromHex("#FFFFFF"),
+                dark ? 0.10 : 0.30);
+
+            GlowOneColor.Color = Color.FromArgb(255, glowOne.R, glowOne.G, glowOne.B);
+            GlowTwoColor.Color = Color.FromArgb(255, glowTwo.R, glowTwo.G, glowTwo.B);
+
+            GlowOne.Opacity = dark ? 0.20 : 0.28;
+            GlowTwo.Opacity = dark ? 0.18 : 0.24;
+        }
+
+        private void StartSoftGlowAnimation()
+        {
+            AnimateGlow(
+                GlowOneTransform,
+                fromX: -20,
+                toX: 50,
+                fromY: -10,
+                toY: 35,
+                seconds: 5.8);
+
+            AnimateGlow(
+                GlowTwoTransform,
+                fromX: 30,
+                toX: -55,
+                fromY: 15,
+                toY: -40,
+                seconds: 6.6);
+
+            AnimateOpacity(GlowOne, from: GlowOne.Opacity * 0.75, to: GlowOne.Opacity, seconds: 3.6);
+            AnimateOpacity(GlowTwo, from: GlowTwo.Opacity * 0.70, to: GlowTwo.Opacity, seconds: 4.2);
+        }
+
+        private static void AnimateGlow(
+            TranslateTransform transform,
+            double fromX,
+            double toX,
+            double fromY,
+            double toY,
+            double seconds)
+        {
+            var animX = new DoubleAnimation
+            {
+                From = fromX,
+                To = toX,
+                Duration = TimeSpan.FromSeconds(seconds),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase
+                {
+                    EasingMode = EasingMode.EaseInOut
+                }
+            };
+
+            var animY = new DoubleAnimation
+            {
+                From = fromY,
+                To = toY,
+                Duration = TimeSpan.FromSeconds(seconds + 0.8),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase
+                {
+                    EasingMode = EasingMode.EaseInOut
+                }
+            };
+
+            transform.BeginAnimation(TranslateTransform.XProperty, animX);
+            transform.BeginAnimation(TranslateTransform.YProperty, animY);
+        }
+
+        private static void AnimateOpacity(UIElement element, double from, double to, double seconds)
+        {
+            var animation = new DoubleAnimation
+            {
+                From = from,
+                To = to,
+                Duration = TimeSpan.FromSeconds(seconds),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase
+                {
+                    EasingMode = EasingMode.EaseInOut
+                }
+            };
+
+            element.BeginAnimation(OpacityProperty, animation);
         }
 
         private void AnimateProgress(int percent)
@@ -164,8 +270,8 @@ namespace FontForge
             };
 
             RootCard.BeginAnimation(OpacityProperty, fade);
-            RootScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, scaleX);
-            RootScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, scaleY);
+            RootScale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleX);
+            RootScale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleY);
         }
 
         private void PlayOutroAnimation()
@@ -190,6 +296,40 @@ namespace FontForge
             };
 
             RootCard.BeginAnimation(OpacityProperty, fade);
+        }
+
+        private static Color GetResourceColor(string key, string fallbackHex)
+        {
+            try
+            {
+                if (Application.Current.Resources.Contains(key) &&
+                    Application.Current.Resources[key] is SolidColorBrush brush)
+                {
+                    return brush.Color;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return ColorFromHex(fallbackHex);
+        }
+
+        private static Color ColorFromHex(string hex)
+        {
+            return (Color)ColorConverter.ConvertFromString(hex);
+        }
+
+        private static Color Mix(Color a, Color b, double amount)
+        {
+            amount = Math.Clamp(amount, 0, 1);
+
+            byte r = (byte)Math.Round(a.R + (b.R - a.R) * amount);
+            byte g = (byte)Math.Round(a.G + (b.G - a.G) * amount);
+            byte bl = (byte)Math.Round(a.B + (b.B - a.B) * amount);
+
+            return Color.FromRgb(r, g, bl);
         }
     }
 }

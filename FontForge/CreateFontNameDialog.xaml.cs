@@ -15,29 +15,19 @@ namespace FontForge
             InitializeComponent();
 
             // IsChecked = true => светлая (🔆), false => тёмная (🌙)
-            ThemeToggleButton.IsChecked = !App.IsDarkTheme;
 
-            App.ThemeChanged += OnThemeChanged;
 
             Loaded += (_, __) => NameBox.Focus();
-            Closed += (_, __) => App.ThemeChanged -= OnThemeChanged;
         }
 
-        private void OnThemeChanged()
-        {
-            ThemeToggleButton.IsChecked = !App.IsDarkTheme;
-        }
 
         private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
         {
             if (_isThemeAnimating) return;
 
             _isThemeAnimating = true;
-            ThemeToggleButton.IsEnabled = false;
 
             // пользователь переключил тумблер:
-            bool wantLight = ThemeToggleButton.IsChecked == true;
-            bool wantDark = !wantLight;
 
             // затемнение
             var fadeTo = new DoubleAnimation
@@ -51,7 +41,6 @@ namespace FontForge
             fadeTo.Completed += (_, __) =>
             {
                 // применяем тему когда “закрыто”
-                App.SetTheme(wantDark);
 
                 // возвращаем
                 var fadeBack = new DoubleAnimation
@@ -64,7 +53,6 @@ namespace FontForge
 
                 fadeBack.Completed += (___, ____) =>
                 {
-                    ThemeToggleButton.IsEnabled = true;
                     _isThemeAnimating = false;
                 };
 

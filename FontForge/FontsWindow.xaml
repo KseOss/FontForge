@@ -9,152 +9,23 @@
         Background="{DynamicResource BackgroundBrush}"
         Icon="/Images/Logo.png"
         Opacity="0"
-        Loaded="Window_Loaded"
-        Closed="Window_Closed">
+        Loaded="Window_Loaded">
 
     <Window.Resources>
 
-        <!-- ToggleSwitch темы -->
-        <Style x:Key="ThemeToggleSwitchStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="70"/>
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Grid Width="{TemplateBinding Width}"
-                              Height="{TemplateBinding Height}">
-
-                            <Border x:Name="Track"
-                                    CornerRadius="17"
-                                    Background="#D6D6D6"
-                                    BorderBrush="#B8B8B8"
-                                    BorderThickness="1"/>
-
-                            <Border x:Name="Thumb"
-                                    Width="30"
-                                    Height="30"
-                                    CornerRadius="15"
-                                    Background="White"
-                                    HorizontalAlignment="Left"
-                                    Margin="2">
-
-                                <Border.RenderTransform>
-                                    <TranslateTransform x:Name="ThumbTransform" X="0"/>
-                                </Border.RenderTransform>
-
-                                <TextBlock x:Name="IconText"
-                                           Text="🌙"
-                                           FontSize="16"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"/>
-                            </Border>
-                        </Grid>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter TargetName="IconText" Property="Text" Value="🔆"/>
-
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
-                                                             Storyboard.TargetProperty="X"
-                                                             To="36"
-                                                             Duration="0:0:0.18"
-                                                             AccelerationRatio="0.2"
-                                                             DecelerationRatio="0.8"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
-                                                             Storyboard.TargetProperty="X"
-                                                             To="0"
-                                                             Duration="0:0:0.18"
-                                                             AccelerationRatio="0.2"
-                                                             DecelerationRatio="0.8"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
-                            </Trigger>
-
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Thumb" Property="Background" Value="#F3F3F3"/>
-                            </Trigger>
-
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Track" Property="Opacity" Value="0.55"/>
-                                <Setter TargetName="Thumb" Property="Opacity" Value="0.55"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-
-        <!-- Основная кнопка -->
-        <Style x:Key="PrimaryButton" TargetType="Button">
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource AppPrimaryButton}">
             <Setter Property="Height" Value="48"/>
             <Setter Property="MinWidth" Value="230"/>
             <Setter Property="Padding" Value="20,0"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root"
-                                CornerRadius="24"
-                                Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              Margin="{TemplateBinding Padding}"
-                                              RecognizesAccessKey="True"/>
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
-                            </Trigger>
-
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.82"/>
-                            </Trigger>
-
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
-
-        <!-- Небольшая кнопка во вкладках -->
-        <Style x:Key="SmallPrimaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="MinWidth" Value="138"/>
-            <Setter Property="Padding" Value="16,0"/>
+        <Style x:Key="HeaderSettingsButton" TargetType="Button" BasedOn="{StaticResource AppSecondaryButton}">
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="14,0"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
 
-
-        <!-- Иконка-кнопка -->
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Width" Value="38"/>
             <Setter Property="Height" Value="38"/>
@@ -191,8 +62,6 @@
             </Setter>
         </Style>
 
-
-        <!-- Карточка шрифта -->
         <Style x:Key="FontCard" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="16"/>
@@ -202,6 +71,16 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
+        <!-- Контрастная иконка пустого состояния -->
+        <Style x:Key="EmptyStateIconBox" TargetType="Border">
+            <Setter Property="Width" Value="78"/>
+            <Setter Property="Height" Value="78"/>
+            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
 
         <!-- Вкладки -->
         <Style x:Key="PillTabControlStyle" TargetType="{x:Type TabControl}">
@@ -237,23 +116,25 @@
             </Setter>
         </Style>
 
-
         <Style x:Key="PillTabItemStyle" TargetType="{x:Type TabItem}">
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="FontWeight" Value="Normal"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
                         <Border x:Name="Pill"
                                 CornerRadius="14"
-                                Padding="16,8"
+                                Padding="18,8"
                                 Margin="4,2"
                                 Background="Transparent">
                             <ContentPresenter ContentSource="Header"
                                               RecognizesAccessKey="True"
                                               HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"
+                                              TextElement.FontWeight="{TemplateBinding FontWeight}"/>
                         </Border>
 
                         <ControlTemplate.Triggers>
@@ -265,10 +146,11 @@
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Pill" Property="Background" Value="{DynamicResource ButtonBackgroundBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
                             </Trigger>
 
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.6"/>
+                                <Setter Property="Opacity" Value="0.65"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -277,7 +159,6 @@
         </Style>
 
     </Window.Resources>
-
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -303,13 +184,12 @@
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
             </StackPanel>
 
-            <ToggleButton x:Name="ThemeToggleButton"
-                          Grid.Column="1"
-                          Style="{StaticResource ThemeToggleSwitchStyle}"
-                          VerticalAlignment="Top"
-                          Click="ThemeToggleButton_Click"/>
+            <Button Grid.Column="1"
+                    Content="⚙ Настройки"
+                    Style="{StaticResource HeaderSettingsButton}"
+                    VerticalAlignment="Top"
+                    Click="OpenSettings_Click"/>
         </Grid>
-
 
         <!-- Content -->
         <Grid Grid.Row="1"
@@ -328,17 +208,22 @@
 
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Width="460">
+                                        Width="520">
 
-                                <TextBlock Text="🅰️"
-                                           FontSize="64"
-                                           HorizontalAlignment="Center"/>
+                                <Border Style="{StaticResource EmptyStateIconBox}">
+                                    <TextBlock Text="A"
+                                               FontSize="44"
+                                               FontWeight="Black"
+                                               Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
 
                                 <TextBlock Text="У вас пока нет шрифтов"
                                            FontSize="20"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextBrush}"
-                                           Margin="0,18,0,6"
+                                           Margin="0,24,0,6"
                                            HorizontalAlignment="Center"/>
 
                                 <TextBlock Text="Создайте свой первый шрифт на основе собственного почерка"
@@ -354,7 +239,6 @@
                                         Click="CreateNewFont_Click"/>
                             </StackPanel>
                         </Grid>
-
 
                         <!-- List -->
                         <Grid x:Name="ActiveListPanel"
@@ -441,7 +325,6 @@
                     </Grid>
                 </TabItem>
 
-
                 <!-- Корзина -->
                 <TabItem Header="Корзина">
                     <Grid>
@@ -452,17 +335,22 @@
 
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Width="440">
+                                        Width="520">
 
-                                <TextBlock Text="🧺"
-                                           FontSize="64"
-                                           HorizontalAlignment="Center"/>
+                                <Border Style="{StaticResource EmptyStateIconBox}">
+                                    <TextBlock Text="&#xE74D;"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="42"
+                                               Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
 
                                 <TextBlock Text="Корзина пуста"
                                            FontSize="20"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextBrush}"
-                                           Margin="0,18,0,6"
+                                           Margin="0,24,0,6"
                                            HorizontalAlignment="Center"/>
 
                                 <TextBlock Text="Удалённые шрифты будут появляться здесь."
@@ -471,7 +359,6 @@
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </StackPanel>
                         </Grid>
-
 
                         <!-- List -->
                         <Grid x:Name="TrashListPanel"
@@ -528,7 +415,6 @@
 
             </TabControl>
         </Grid>
-
 
         <Rectangle x:Name="FadeOverlay"
                    Grid.RowSpan="2"

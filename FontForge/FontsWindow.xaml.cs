@@ -13,31 +13,22 @@ namespace FontForge
     public partial class FontsWindow : Window
     {
         private readonly List<CreatedFont> _allFonts = new List<CreatedFont>();
-        private bool _isThemeAnimating = false;
 
         public ObservableCollection<CreatedFont> ActiveFonts { get; } = new ObservableCollection<CreatedFont>();
         public ObservableCollection<CreatedFont> TrashFonts { get; } = new ObservableCollection<CreatedFont>();
 
-        // Команда для DoubleClick (открыть редактор)
         public ICommand OpenEditorCommand { get; }
 
         public FontsWindow()
         {
             InitializeComponent();
+
             DataContext = this;
 
             OpenEditorCommand = new RelayCommand<CreatedFont>(OpenEditor);
 
-            ThemeToggleButton.IsChecked = !App.IsDarkTheme;
-            App.ThemeChanged += OnThemeChanged;
-
             LoadAll();
             RefreshViews();
-        }
-
-        private void OnThemeChanged()
-        {
-            ThemeToggleButton.IsChecked = !App.IsDarkTheme;
         }
 
         private void LoadAll()
@@ -56,11 +47,11 @@ namespace FontForge
             ActiveFonts.Clear();
             TrashFonts.Clear();
 
-            foreach (var f in _allFonts.Where(x => !x.IsDeleted).OrderByDescending(x => x.CreatedAt))
-                ActiveFonts.Add(f);
+            foreach (var font in _allFonts.Where(x => !x.IsDeleted).OrderByDescending(x => x.CreatedAt))
+                ActiveFonts.Add(font);
 
-            foreach (var f in _allFonts.Where(x => x.IsDeleted).OrderByDescending(x => x.DeletedAt ?? DateTime.MinValue))
-                TrashFonts.Add(f);
+            foreach (var font in _allFonts.Where(x => x.IsDeleted).OrderByDescending(x => x.DeletedAt ?? DateTime.MinValue))
+                TrashFonts.Add(font);
 
             EmptyActivePanel.Visibility = ActiveFonts.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             ActiveListPanel.Visibility = ActiveFonts.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
@@ -74,45 +65,30 @@ namespace FontForge
             BeginAnimation(OpacityProperty, new DoubleAnimation(1, TimeSpan.FromMilliseconds(220)));
         }
 
-        private void Window_Closed(object sender, EventArgs e)
+        private void OpenSettings_Click(object sender, RoutedEventArgs e)
         {
-            App.ThemeChanged -= OnThemeChanged;
-        }
-
-        private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_isThemeAnimating) return;
-            _isThemeAnimating = true;
-            ThemeToggleButton.IsEnabled = false;
-
-            bool wantLight = ThemeToggleButton.IsChecked == true;
-            bool wantDark = !wantLight;
-
-            var fadeTo = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140));
-            fadeTo.Completed += (_, __) =>
+            var settingsWindow = new ThemeSettingsWindow
             {
-                App.SetTheme(wantDark);
-
-                var fadeBack = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(180));
-                fadeBack.Completed += (___, ____) =>
-                {
-                    ThemeToggleButton.IsEnabled = true;
-                    _isThemeAnimating = false;
-                };
-
-                FadeOverlay.BeginAnimation(OpacityProperty, fadeBack);
+                Owner = this
             };
 
-            FadeOverlay.BeginAnimation(OpacityProperty, fadeTo);
+            settingsWindow.ShowDialog();
         }
 
         private void CreateNewFont_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new CreateFontNameDialog { Owner = this };
-            bool? ok = dlg.ShowDialog();
-            if (ok != true) return;
+            var dialog = new CreateFontNameDialog
+            {
+                Owner = this
+            };
 
-            string name = (dlg.FontName ?? "").Trim();
+            bool? ok = dialog.ShowDialog();
+
+            if (ok != true)
+                return;
+
+            string name = (dialog.FontName ?? "").Trim();
+
             if (string.IsNullOrWhiteSpace(name))
             {
                 MessageBox.Show("Введите название шрифта.");
@@ -134,68 +110,78 @@ namespace FontForge
             };
 
             _allFonts.Add(created);
+
             SaveAll();
             RefreshViews();
 
-            // Сразу открываем редактор
             OpenEditor(created);
 
-            // После закрытия редактора — перечитываем и обновляем
             LoadAll();
             RefreshViews();
         }
 
-        // ======= РЕДАКТИРОВАНИЕ ШРИФТА =======
-
         private void EditFont_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is CreatedFont font)
+            if (sender is Button button && button.DataContext is CreatedFont font)
                 OpenEditor(font);
         }
 
         private void OpenEditor(CreatedFont? font)
         {
-            if (font == null) return;
+            if (font == null)
+                return;
 
-            // Нельзя редактировать то, что в корзине
             var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
-            if (found == null) return;
+
+            if (found == null)
+                return;
+
             if (found.IsDeleted)
             {
                 MessageBox.Show("Этот шрифт находится в корзине. Сначала восстановите его.");
                 return;
             }
 
-            var editor = new FontEditorWindow(found.Id) { Owner = this };
+            var editor = new FontEditorWindow(found.Id)
+            {
+                Owner = this
+            };
+
             editor.ShowDialog();
 
-            // после закрытия редактора — обновим списки
             LoadAll();
             RefreshViews();
         }
 
-        // ======= Переименование =======
-
         private void RenameFont_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button btn || btn.DataContext is not CreatedFont font) return;
+            if (sender is not Button button || button.DataContext is not CreatedFont font)
+                return;
 
             var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
-            if (found == null) return;
+
+            if (found == null)
+                return;
+
             if (found.IsDeleted)
             {
                 MessageBox.Show("Этот шрифт находится в корзине. Сначала восстановите его.");
                 return;
             }
 
-            var dlg = new CreateFontNameDialog { Owner = this };
-            dlg.Title = "Переименовать шрифт";
-            // Если хочешь — можно заранее вставить текущее имя:
-            // (но тогда нужно добавить публичный доступ к NameBox или метод SetInitialName, мы не лезем туда)
-            bool? ok = dlg.ShowDialog();
-            if (ok != true) return;
+            var dialog = new CreateFontNameDialog
+            {
+                Owner = this,
+                Title = "Переименовать шрифт"
+            };
 
-            string newName = (dlg.FontName ?? "").Trim();
+            bool? ok = dialog.ShowDialog();
+
+            if (ok != true)
+                return;
+
+            string newName = (dialog.FontName ?? "").Trim();
+
             if (string.IsNullOrWhiteSpace(newName))
             {
                 MessageBox.Show("Введите название шрифта.");
@@ -209,63 +195,66 @@ namespace FontForge
             }
 
             found.Name = newName;
+
             SaveAll();
             RefreshViews();
         }
 
-        // ======= Корзина =======
-
         private void MoveToTrash_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is CreatedFont font)
-            {
-                var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
-                if (found == null) return;
+            if (sender is not Button button || button.DataContext is not CreatedFont font)
+                return;
 
-                found.IsDeleted = true;
-                found.DeletedAt = DateTime.Now;
+            var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
 
-                SaveAll();
-                RefreshViews();
-            }
+            if (found == null)
+                return;
+
+            found.IsDeleted = true;
+            found.DeletedAt = DateTime.Now;
+
+            SaveAll();
+            RefreshViews();
         }
 
         private void Restore_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is CreatedFont font)
-            {
-                var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
-                if (found == null) return;
+            if (sender is not Button button || button.DataContext is not CreatedFont font)
+                return;
 
-                found.IsDeleted = false;
-                found.DeletedAt = null;
+            var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
 
-                SaveAll();
-                RefreshViews();
-            }
+            if (found == null)
+                return;
+
+            found.IsDeleted = false;
+            found.DeletedAt = null;
+
+            SaveAll();
+            RefreshViews();
         }
 
         private void DeleteForever_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is CreatedFont font)
-            {
-                var result = MessageBox.Show(
-                    "Удалить шрифт навсегда? Это действие нельзя отменить.",
-                    "Подтверждение",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
+            if (sender is not Button button || button.DataContext is not CreatedFont font)
+                return;
 
-                if (result != MessageBoxResult.Yes) return;
+            MessageBoxResult result = MessageBox.Show(
+                "Удалить шрифт навсегда? Это действие нельзя отменить.",
+                "Подтверждение",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
 
-                _allFonts.RemoveAll(x => x.Id == font.Id);
+            if (result != MessageBoxResult.Yes)
+                return;
 
-                SaveAll();
-                RefreshViews();
-            }
+            _allFonts.RemoveAll(x => x.Id == font.Id);
+
+            SaveAll();
+            RefreshViews();
         }
     }
 
-    // ======= Простой RelayCommand (чтобы работал DoubleClick) =======
     public class RelayCommand<T> : ICommand
     {
         private readonly Action<T?> _execute;
@@ -279,18 +268,28 @@ namespace FontForge
 
         public bool CanExecute(object? parameter)
         {
-            if (_canExecute == null) return true;
-            if (parameter is T t) return _canExecute(t);
+            if (_canExecute == null)
+                return true;
+
+            if (parameter is T value)
+                return _canExecute(value);
+
             return _canExecute(default);
         }
 
         public void Execute(object? parameter)
         {
-            if (parameter is T t) _execute(t);
-            else _execute(default);
+            if (parameter is T value)
+                _execute(value);
+            else
+                _execute(default);
         }
 
         public event EventHandler? CanExecuteChanged;
-        public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+
+        public void RaiseCanExecuteChanged()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 }
