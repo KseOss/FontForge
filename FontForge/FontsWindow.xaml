@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Мои шрифты"
-        Height="560" Width="940"
+        Height="560"
+        Width="940"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}"
@@ -13,7 +14,7 @@
 
     <Window.Resources>
 
-        <!-- ToggleSwitch темы (как в MainWindow) -->
+        <!-- ToggleSwitch темы -->
         <Style x:Key="ThemeToggleSwitchStyle" TargetType="ToggleButton">
             <Setter Property="Width" Value="70"/>
             <Setter Property="Height" Value="34"/>
@@ -23,21 +24,27 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                        <Grid Width="{TemplateBinding Width}"
+                              Height="{TemplateBinding Height}">
+
                             <Border x:Name="Track"
                                     CornerRadius="17"
                                     Background="#D6D6D6"
                                     BorderBrush="#B8B8B8"
                                     BorderThickness="1"/>
+
                             <Border x:Name="Thumb"
-                                    Width="30" Height="30"
+                                    Width="30"
+                                    Height="30"
                                     CornerRadius="15"
                                     Background="White"
                                     HorizontalAlignment="Left"
                                     Margin="2">
+
                                 <Border.RenderTransform>
                                     <TranslateTransform x:Name="ThumbTransform" X="0"/>
                                 </Border.RenderTransform>
+
                                 <TextBlock x:Name="IconText"
                                            Text="🌙"
                                            FontSize="16"
@@ -48,8 +55,8 @@
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="#2D8CFF"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="#2D8CFF"/>
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="IconText" Property="Text" Value="🔆"/>
 
                                 <Trigger.EnterActions>
@@ -82,36 +89,75 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Thumb" Property="Background" Value="#F3F3F3"/>
                             </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Track" Property="Opacity" Value="0.55"/>
+                                <Setter TargetName="Thumb" Property="Opacity" Value="0.55"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
+
         <!-- Основная кнопка -->
         <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Height" Value="46"/>
-            <Setter Property="Padding" Value="24,0"/>
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="MinWidth" Value="230"/>
+            <Setter Property="Padding" Value="20,0"/>
             <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border CornerRadius="23" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="Root"
+                                CornerRadius="24"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"/>
                         </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.82"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
+
+        <!-- Небольшая кнопка во вкладках -->
+        <Style x:Key="SmallPrimaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="138"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+
         <!-- Иконка-кнопка -->
         <Style x:Key="IconButton" TargetType="Button">
-            <Setter Property="Width" Value="34"/>
-            <Setter Property="Height" Value="34"/>
+            <Setter Property="Width" Value="38"/>
+            <Setter Property="Height" Value="38"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -120,15 +166,24 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border CornerRadius="17" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="Root"
+                                CornerRadius="19"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
+
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#22FFFFFF"/>
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SecondaryButtonBackgroundBrush}"/>
                             </Trigger>
+
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#33FFFFFF"/>
+                                <Setter TargetName="Root" Property="Opacity" Value="0.72"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -136,15 +191,19 @@
             </Setter>
         </Style>
 
-        <!-- Карточка -->
+
+        <!-- Карточка шрифта -->
         <Style x:Key="FontCard" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="16"/>
             <Setter Property="Margin" Value="0,0,0,14"/>
-            <Setter Property="Background" Value="#0D000000"/>
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
-        <!-- ====== КРАСИВЫЕ ВКЛАДКИ (PILL TABS) ====== -->
+
+        <!-- Вкладки -->
         <Style x:Key="PillTabControlStyle" TargetType="{x:Type TabControl}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -158,7 +217,9 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <Border Background="#0D000000"
+                            <Border Background="{DynamicResource CardBrush}"
+                                    BorderBrush="{DynamicResource MutedBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="18"
                                     Padding="6"
                                     HorizontalAlignment="Left">
@@ -176,6 +237,7 @@
             </Setter>
         </Style>
 
+
         <Style x:Key="PillTabItemStyle" TargetType="{x:Type TabItem}">
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
@@ -185,7 +247,7 @@
                     <ControlTemplate TargetType="TabItem">
                         <Border x:Name="Pill"
                                 CornerRadius="14"
-                                Padding="14,8"
+                                Padding="16,8"
                                 Margin="4,2"
                                 Background="Transparent">
                             <ContentPresenter ContentSource="Header"
@@ -196,7 +258,7 @@
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Pill" Property="Background" Value="#14FFFFFF"/>
+                                <Setter TargetName="Pill" Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                             </Trigger>
 
@@ -216,10 +278,15 @@
 
     </Window.Resources>
 
+
     <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Grid>
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -230,6 +297,7 @@
                            FontSize="26"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextBrush}"/>
+
                 <TextBlock Text="Управление созданными шрифтами и корзиной"
                            Margin="0,6,0,0"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -242,7 +310,10 @@
                           Click="ThemeToggleButton_Click"/>
         </Grid>
 
-        <Grid Margin="0,74,0,0">
+
+        <!-- Content -->
+        <Grid Grid.Row="1"
+              Margin="0,22,0,0">
 
             <TabControl Style="{StaticResource PillTabControlStyle}"
                         ItemContainerStyle="{StaticResource PillTabItemStyle}">
@@ -252,41 +323,57 @@
                     <Grid>
 
                         <!-- Empty -->
-                        <Grid x:Name="EmptyActivePanel" Visibility="Collapsed">
+                        <Grid x:Name="EmptyActivePanel"
+                              Visibility="Collapsed">
+
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Width="440">
-                                <TextBlock Text="🅰️" FontSize="64" HorizontalAlignment="Center"/>
+                                        Width="460">
+
+                                <TextBlock Text="🅰️"
+                                           FontSize="64"
+                                           HorizontalAlignment="Center"/>
+
                                 <TextBlock Text="У вас пока нет шрифтов"
-                                           FontSize="20" FontWeight="SemiBold"
+                                           FontSize="20"
+                                           FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextBrush}"
                                            Margin="0,18,0,6"
                                            HorizontalAlignment="Center"/>
+
                                 <TextBlock Text="Создайте свой первый шрифт на основе собственного почерка"
                                            FontSize="14"
                                            TextAlignment="Center"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            Margin="0,0,0,26"/>
-                                <Button Content="+ Создать новый шрифт"
+
+                                <Button Content="Создать новый шрифт"
                                         Style="{StaticResource PrimaryButton}"
-                                        Click="CreateNewFont_Click"
-                                        HorizontalAlignment="Center"/>
+                                        Width="240"
+                                        HorizontalAlignment="Center"
+                                        Click="CreateNewFont_Click"/>
                             </StackPanel>
                         </Grid>
 
+
                         <!-- List -->
-                        <Grid x:Name="ActiveListPanel" Visibility="Collapsed">
+                        <Grid x:Name="ActiveListPanel"
+                              Visibility="Collapsed">
+
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer Grid.Row="0"
+                                          VerticalScrollBarVisibility="Auto"
+                                          Padding="0,0,4,0">
+
                                 <ItemsControl ItemsSource="{Binding ActiveFonts}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Style="{StaticResource FontCard}">
-                                                <!-- Открытие редактора по клику на карточку -->
+
                                                 <Border.InputBindings>
                                                     <MouseBinding MouseAction="LeftDoubleClick"
                                                                   CommandParameter="{Binding}"
@@ -301,18 +388,18 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
 
-                                                    <StackPanel>
+                                                    <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Name}"
                                                                    FontSize="16"
                                                                    FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource TextBrush}"/>
+
                                                         <TextBlock Text="{Binding CreatedAt, StringFormat='Создан: {0:dd.MM.yyyy HH:mm}'}"
                                                                    Margin="0,6,0,0"
                                                                    FontSize="12"
                                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                     </StackPanel>
 
-                                                    <!-- РЕДАКТИРОВАТЬ -->
                                                     <Button Grid.Column="1"
                                                             Style="{StaticResource IconButton}"
                                                             Content="✏️"
@@ -320,7 +407,6 @@
                                                             Click="EditFont_Click"
                                                             Margin="0,0,6,0"/>
 
-                                                    <!-- ПЕРЕИМЕНОВАТЬ -->
                                                     <Button Grid.Column="2"
                                                             Style="{StaticResource IconButton}"
                                                             Content="📝"
@@ -328,7 +414,6 @@
                                                             Click="RenameFont_Click"
                                                             Margin="0,0,6,0"/>
 
-                                                    <!-- В КОРЗИНУ -->
                                                     <Button Grid.Column="3"
                                                             Style="{StaticResource IconButton}"
                                                             Content="🗑️"
@@ -341,32 +426,45 @@
                                 </ItemsControl>
                             </ScrollViewer>
 
-                            <Button Grid.Row="1"
-                                    Content="Создать новый шрифт"
-                                    Style="{StaticResource PrimaryButton}"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,18,0,0"
-                                    Click="CreateNewFont_Click"/>
+                            <Border Grid.Row="1"
+                                    Padding="0,12,0,0"
+                                    Background="Transparent">
+
+                                <Button Content="Создать новый шрифт"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Width="240"
+                                        HorizontalAlignment="Center"
+                                        Click="CreateNewFont_Click"/>
+                            </Border>
                         </Grid>
 
                     </Grid>
                 </TabItem>
+
 
                 <!-- Корзина -->
                 <TabItem Header="Корзина">
                     <Grid>
 
                         <!-- Empty -->
-                        <Grid x:Name="EmptyTrashPanel" Visibility="Collapsed">
+                        <Grid x:Name="EmptyTrashPanel"
+                              Visibility="Collapsed">
+
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Width="440">
-                                <TextBlock Text="🧺" FontSize="64" HorizontalAlignment="Center"/>
+
+                                <TextBlock Text="🧺"
+                                           FontSize="64"
+                                           HorizontalAlignment="Center"/>
+
                                 <TextBlock Text="Корзина пуста"
-                                           FontSize="20" FontWeight="SemiBold"
+                                           FontSize="20"
+                                           FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextBrush}"
                                            Margin="0,18,0,6"
                                            HorizontalAlignment="Center"/>
+
                                 <TextBlock Text="Удалённые шрифты будут появляться здесь."
                                            FontSize="14"
                                            TextAlignment="Center"
@@ -374,9 +472,14 @@
                             </StackPanel>
                         </Grid>
 
+
                         <!-- List -->
-                        <Grid x:Name="TrashListPanel" Visibility="Collapsed">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid x:Name="TrashListPanel"
+                              Visibility="Collapsed">
+
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          Padding="0,0,4,0">
+
                                 <ItemsControl ItemsSource="{Binding TrashFonts}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -388,11 +491,12 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
 
-                                                    <StackPanel>
+                                                    <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Name}"
                                                                    FontSize="16"
                                                                    FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource TextBrush}"/>
+
                                                         <TextBlock Text="{Binding DeletedAt, StringFormat='В корзине с: {0:dd.MM.yyyy HH:mm}'}"
                                                                    Margin="0,6,0,0"
                                                                    FontSize="12"
@@ -425,8 +529,9 @@
             </TabControl>
         </Grid>
 
-        <!-- Overlay -->
+
         <Rectangle x:Name="FadeOverlay"
+                   Grid.RowSpan="2"
                    Fill="{DynamicResource BackgroundBrush}"
                    Opacity="0"
                    IsHitTestVisible="False"/>

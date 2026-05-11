@@ -5,7 +5,7 @@ namespace FontForge.Classes
 {
     public class GlyphEntry
     {
-        public string Char { get; set; } = ""; // например "А"
+        public string Char { get; set; } = "";
 
         // Несколько вариантов одной буквы
         public List<GlyphVariant> Variants { get; set; } = new List<GlyphVariant>();

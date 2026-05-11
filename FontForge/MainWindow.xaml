@@ -56,8 +56,8 @@
 
                             <!-- Включено: светлая тема, солнце справа -->
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="#2D8CFF"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="#2D8CFF"/>
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="IconText" Property="Text" Value="🔆"/>
 
                                 <Trigger.EnterActions>

@@ -149,7 +149,7 @@ namespace FontForge
                 return;
             }
 
-            var sfd = new SaveFileDialog
+            var saveFileDialog = new SaveFileDialog
             {
                 Filter = "PDF (*.pdf)|*.pdf",
                 FileName = "document.pdf",
@@ -157,7 +157,7 @@ namespace FontForge
                 AddExtension = true
             };
 
-            if (sfd.ShowDialog() != true)
+            if (saveFileDialog.ShowDialog() != true)
                 return;
 
             try
@@ -176,7 +176,7 @@ namespace FontForge
                 float pdfFirstLineIndent = (float)FirstLineIndent * scale;
 
                 GeneratePdfAsRenderedPages(
-                    sfd.FileName,
+                    saveFileDialog.FileName,
                     fontSnapshot,
                     text,
                     pdfGlyphSize,
@@ -202,8 +202,6 @@ namespace FontForge
             }
         }
 
-        // PDF теперь создаётся из временных PNG-страниц.
-        // Так отрицательный межбуквенный интервал работает без ошибки QuestPDF.
         private void GeneratePdfAsRenderedPages(
             string pdfPath,
             CreatedFont font,
@@ -227,7 +225,7 @@ namespace FontForge
 
             try
             {
-                var doc = Document.Create(container =>
+                var document = Document.Create(container =>
                 {
                     foreach (string pageImage in temporaryPageImages)
                     {
@@ -246,7 +244,7 @@ namespace FontForge
                     }
                 });
 
-                doc.GeneratePdf(pdfPath);
+                document.GeneratePdf(pdfPath);
             }
             finally
             {
@@ -259,7 +257,7 @@ namespace FontForge
                     }
                     catch
                     {
-                        // Не мешаем пользователю, если временный файл не удалился.
+                        // Не критично.
                     }
                 }
 
@@ -296,8 +294,6 @@ namespace FontForge
             double contentWidthPt = a4WidthPt - marginPt * 2.0;
             double contentHeightPt = a4HeightPt - marginPt * 2.0;
 
-            // Чем больше renderScale, тем чётче PDF.
-            // 2.0 — хороший баланс качества и размера файла.
             const double renderScale = 2.0;
 
             double pageWidth = contentWidthPt * renderScale;
@@ -322,7 +318,7 @@ namespace FontForge
             var imageCache = new Dictionary<string, BitmapSource>(StringComparer.OrdinalIgnoreCase);
 
             DrawingVisual? currentVisual = null;
-            DrawingContext? dc = null;
+            DrawingContext? drawingContext = null;
 
             double x = 0;
             double y = 0;
@@ -330,9 +326,9 @@ namespace FontForge
             void StartPage()
             {
                 currentVisual = new DrawingVisual();
-                dc = currentVisual.RenderOpen();
+                drawingContext = currentVisual.RenderOpen();
 
-                dc.DrawRectangle(
+                drawingContext.DrawRectangle(
                     Brushes.White,
                     null,
                     new Rect(0, 0, pageWidth, pageHeight));
@@ -343,10 +339,10 @@ namespace FontForge
 
             void FinishPage()
             {
-                if (currentVisual == null || dc == null)
+                if (currentVisual == null || drawingContext == null)
                     return;
 
-                dc.Close();
+                drawingContext.Close();
 
                 int pixelWidth = Math.Max(1, (int)Math.Ceiling(pageWidth));
                 int pixelHeight = Math.Max(1, (int)Math.Ceiling(pageHeight));
@@ -374,12 +370,12 @@ namespace FontForge
                 result.Add(pagePath);
 
                 currentVisual = null;
-                dc = null;
+                drawingContext = null;
             }
 
             void EnsurePage()
             {
-                if (dc == null)
+                if (drawingContext == null)
                     StartPage();
             }
 
@@ -396,25 +392,6 @@ namespace FontForge
 
                 if (y + glyphSize > pageHeight)
                     NewPage();
-            }
-
-            void DrawFallbackSymbol(string symbol, double drawX, double drawY)
-            {
-                if (dc == null)
-                    return;
-
-                var formattedText = new FormattedText(
-                    symbol,
-                    CultureInfo.CurrentCulture,
-                    FlowDirection.LeftToRight,
-                    new Typeface("Arial"),
-                    glyphSize * 0.72,
-                    Brushes.Black,
-                    1.0);
-
-                double textY = drawY + Math.Max(0, (glyphSize - formattedText.Height) / 2.0);
-
-                dc.DrawText(formattedText, new Point(drawX, textY));
             }
 
             BitmapSource? GetBitmap(string path)
@@ -434,11 +411,30 @@ namespace FontForge
                 }
             }
 
+            void DrawFallbackSymbol(string symbol, double drawX, double drawY)
+            {
+                if (drawingContext == null)
+                    return;
+
+                var formattedText = new FormattedText(
+                    symbol,
+                    CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface("Arial"),
+                    glyphSize * 0.72,
+                    Brushes.Black,
+                    1.0);
+
+                double textY = drawY + Math.Max(0, (glyphSize - formattedText.Height) / 2.0);
+
+                drawingContext.DrawText(formattedText, new Point(drawX, textY));
+            }
+
             void DrawSymbol(string symbol)
             {
                 EnsurePage();
 
-                if (dc == null)
+                if (drawingContext == null)
                     return;
 
                 if (x + glyphSize > pageWidth && x > 0)
@@ -448,15 +444,15 @@ namespace FontForge
                     NewPage();
 
                 string? imagePath = GlyphImageResolver.FindGlyphImagePath(font, symbol);
-                BitmapSource? bmp = null;
+                BitmapSource? bitmap = null;
 
                 if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
-                    bmp = GetBitmap(imagePath);
+                    bitmap = GetBitmap(imagePath);
 
-                if (bmp != null)
+                if (bitmap != null)
                 {
-                    dc.DrawImage(
-                        bmp,
+                    drawingContext.DrawImage(
+                        bitmap,
                         new Rect(x, y, glyphSize, glyphSize));
                 }
                 else
@@ -464,9 +460,6 @@ namespace FontForge
                     DrawFallbackSymbol(symbol, x, y);
                 }
 
-                // ВАЖНО:
-                // отрицательный межбуквенный интервал работает здесь:
-                // картинка рисуется полного размера, но следующий символ начинается ближе.
                 double advance = Math.Max(minAdvance, glyphSize + letterSpacing);
                 x += advance;
             }
@@ -555,8 +548,6 @@ namespace FontForge
             {
                 var wrap = new WrapPanel
                 {
-                    // Каждый Enter — новый абзац.
-                    // Поэтому отступ первой строки применяется к каждой новой строке.
                     Margin = new Thickness(
                         LeftIndent + FirstLineIndent,
                         0,
@@ -652,16 +643,37 @@ namespace FontForge
             }
         }
 
-        private static TextBlock CreateFallbackText(string symbol, double size, double letterSpacing)
+        private static TextBlock CreateFallbackText(
+            string symbol,
+            double size,
+            double letterSpacing)
         {
             return new TextBlock
             {
                 Text = symbol,
                 FontSize = size * 0.72,
-                Foreground = (Brush)Application.Current.Resources["PreviewTextBrush"],
+                Foreground = GetPreviewTextBrush(),
                 Margin = new Thickness(letterSpacing / 2.0, 0, letterSpacing / 2.0, 0),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center
             };
+        }
+
+        private static Brush GetPreviewTextBrush()
+        {
+            try
+            {
+                if (Application.Current.Resources.Contains("PreviewTextBrush") &&
+                    Application.Current.Resources["PreviewTextBrush"] is Brush brush)
+                {
+                    return brush;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return Brushes.Black;
         }
 
         private static BitmapSource LoadBitmapForPreview(string path)
@@ -715,7 +727,7 @@ namespace FontForge
             if (font.Glyphs == null)
                 return;
 
-            foreach (var glyph in font.Glyphs)
+            foreach (GlyphEntry glyph in font.Glyphs)
                 FontStorage.NormalizeDefaults(font, glyph.Char);
         }
 

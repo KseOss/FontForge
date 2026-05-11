@@ -106,7 +106,7 @@
                                 Width="0"
                                 HorizontalAlignment="Left"
                                 CornerRadius="4"
-                                Background="#2D8CFF"/>
+                                Background="{DynamicResource AccentBrush}"/>
                     </Grid>
                 </Border>
 

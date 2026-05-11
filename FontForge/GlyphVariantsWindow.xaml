@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Варианты буквы"
-        Height="620" Width="1020"
+        Height="620"
+        Width="1020"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}"
@@ -12,7 +13,6 @@
 
     <Window.Resources>
 
-        <!-- ToggleSwitch темы -->
         <Style x:Key="ThemeToggleSwitchStyle" TargetType="ToggleButton">
             <Setter Property="Width" Value="70"/>
             <Setter Property="Height" Value="34"/>
@@ -23,20 +23,37 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
                         <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
-                            <Border x:Name="Track" CornerRadius="17" Background="#D6D6D6" BorderBrush="#B8B8B8" BorderThickness="1"/>
-                            <Border x:Name="Thumb" Width="30" Height="30" CornerRadius="15" Background="White" HorizontalAlignment="Left" Margin="2">
+                            <Border x:Name="Track"
+                                    CornerRadius="17"
+                                    Background="#D6D6D6"
+                                    BorderBrush="#B8B8B8"
+                                    BorderThickness="1"/>
+
+                            <Border x:Name="Thumb"
+                                    Width="30"
+                                    Height="30"
+                                    CornerRadius="15"
+                                    Background="White"
+                                    HorizontalAlignment="Left"
+                                    Margin="2">
                                 <Border.RenderTransform>
                                     <TranslateTransform x:Name="ThumbTransform" X="0"/>
                                 </Border.RenderTransform>
-                                <TextBlock x:Name="IconText" Text="🌙" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+                                <TextBlock x:Name="IconText"
+                                           Text="🌙"
+                                           FontSize="16"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"/>
                             </Border>
                         </Grid>
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="#2D8CFF"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="#2D8CFF"/>
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="IconText" Property="Text" Value="🔆"/>
+
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
@@ -49,6 +66,7 @@
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
+
                                 <Trigger.ExitActions>
                                     <BeginStoryboard>
                                         <Storyboard>
@@ -71,13 +89,15 @@
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="16"/>
-            <Setter Property="Background" Value="#0D000000"/>
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
         <Style x:Key="VariantCard" TargetType="Border">
             <Setter Property="CornerRadius" Value="16"/>
-            <Setter Property="Background" Value="#06FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#16000000"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="14"/>
             <Setter Property="Margin" Value="0,0,16,0"/>
@@ -88,25 +108,41 @@
             <Setter Property="Margin" Value="0,8,0,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Background" Value="#0A000000"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonTextBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border CornerRadius="10" Background="{TemplateBinding Background}" Padding="10,0">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="Root"
+                                CornerRadius="10"
+                                Background="{TemplateBinding Background}"
+                                Padding="10,0">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
+
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#14000000"/>
+                                <Setter TargetName="Root" Property="Opacity" Value="0.86"/>
                             </Trigger>
+
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#1F000000"/>
+                                <Setter TargetName="Root" Property="Opacity" Value="0.72"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryActionButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
         </Style>
 
         <Style x:Key="IconButton" TargetType="Button">
@@ -120,15 +156,20 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border CornerRadius="17" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="Root"
+                                CornerRadius="17"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
+
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#22FFFFFF"/>
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SecondaryButtonBackgroundBrush}"/>
                             </Trigger>
+
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#33FFFFFF"/>
+                                <Setter TargetName="Root" Property="Opacity" Value="0.72"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -145,7 +186,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -158,7 +198,6 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextBrush}"/>
 
-                <!-- ✅ Пометка про красную точку -->
                 <TextBlock Margin="0,8,0,0"
                            Foreground="{DynamicResource SecondaryTextBrush}">
                     <Run Text="Красная точка "/>
@@ -178,15 +217,25 @@
                           Click="ThemeToggleButton_Click"/>
         </Grid>
 
-        <!-- Variants area -->
-        <Border Grid.Row="1" Margin="0,18,0,0" Style="{StaticResource Card}">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal" x:Name="VariantsPanel"/>
+        <Border Grid.Row="1"
+                Margin="0,18,0,0"
+                Style="{StaticResource Card}">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal"
+                            x:Name="VariantsPanel"/>
             </ScrollViewer>
         </Border>
 
-        <StackPanel Grid.Row="2" Margin="0,18,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Закрыть" Width="140" Height="44" Click="Close_Click"/>
+        <StackPanel Grid.Row="2"
+                    Margin="0,18,0,0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Content="Закрыть"
+                    Width="140"
+                    Height="44"
+                    Style="{StaticResource PrimaryActionButton}"
+                    Click="Close_Click"/>
         </StackPanel>
 
         <Rectangle x:Name="FadeOverlay"

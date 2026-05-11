@@ -105,8 +105,10 @@ namespace FontForge
 
             if (_font.Glyphs != null)
             {
-                foreach (var glyph in _font.Glyphs)
+                foreach (GlyphEntry glyph in _font.Glyphs)
+                {
                     FontStorage.NormalizeDefaults(_font, glyph.Char);
+                }
             }
 
             SaveFont();
@@ -132,7 +134,7 @@ namespace FontForge
             if (_font == null || _font.Glyphs == null)
                 return;
 
-            foreach (var glyph in _font.Glyphs.OrderBy(x => x.Char, StringComparer.Ordinal))
+            foreach (GlyphEntry glyph in _font.Glyphs.OrderBy(x => x.Char, StringComparer.Ordinal))
             {
                 string imagePath = GlyphImageResolver.FindGlyphImagePath(
                     _font,
@@ -158,12 +160,16 @@ namespace FontForge
                 return;
 
             var used = new HashSet<string>(_font.Glyphs.Select(g => g.Char));
-            var dlg = new SelectLetterDialog(used) { Owner = this };
 
-            if (dlg.ShowDialog() != true)
+            var dialog = new SelectLetterDialog(used)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() != true)
                 return;
 
-            string selected = dlg.SelectedChar ?? "";
+            string selected = dialog.SelectedChar ?? "";
 
             if (string.IsNullOrWhiteSpace(selected))
                 return;
@@ -301,7 +307,10 @@ namespace FontForge
             PreviewRenderPanel.Children.Add(root);
         }
 
-        private static FrameworkElement CreatePngGlyphPreviewOrFallback(string symbol, string imagePath, double size)
+        private static FrameworkElement CreatePngGlyphPreviewOrFallback(
+            string symbol,
+            string imagePath,
+            double size)
         {
             try
             {
@@ -431,7 +440,7 @@ namespace FontForge
             if (_font == null)
                 return;
 
-            var sfd = new SaveFileDialog
+            var saveFileDialog = new SaveFileDialog
             {
                 Title = "Сохранить шрифт",
                 Filter = "TrueType Font (*.ttf)|*.ttf|OpenType Font (*.otf)|*.otf",
@@ -440,12 +449,12 @@ namespace FontForge
                 AddExtension = true
             };
 
-            if (sfd.ShowDialog() != true)
+            if (saveFileDialog.ShowDialog() != true)
                 return;
 
             try
             {
-                FontExportResult result = TrueTypeFontExporter.Export(_font, sfd.FileName);
+                FontExportResult result = TrueTypeFontExporter.Export(_font, saveFileDialog.FileName);
 
                 string message =
                     "Шрифт успешно сохранён.\n\n" +

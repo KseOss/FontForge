@@ -52,7 +52,10 @@ namespace FontForge.Classes
             ["у"] = new[] { "y" }
         };
 
-        public static string? FindGlyphImagePath(CreatedFont? font, string? symbol, bool allowLookAlikeFallback = true)
+        public static string? FindGlyphImagePath(
+            CreatedFont? font,
+            string? symbol,
+            bool allowLookAlikeFallback = true)
         {
             if (font == null || font.Glyphs == null || string.IsNullOrWhiteSpace(symbol))
                 return null;
@@ -62,10 +65,10 @@ namespace FontForge.Classes
                 GlyphEntry? glyph = font.Glyphs.FirstOrDefault(g =>
                     string.Equals(g.Char, candidate, StringComparison.Ordinal));
 
-                string? fromVariantsWindow = FindImagePathFromGlyphVariants(font.Id, glyph);
+                string? fromVariants = FindImagePathFromGlyphVariants(font.Id, glyph);
 
-                if (!string.IsNullOrWhiteSpace(fromVariantsWindow))
-                    return fromVariantsWindow;
+                if (!string.IsNullOrWhiteSpace(fromVariants))
+                    return fromVariants;
             }
 
             return null;
@@ -76,7 +79,8 @@ namespace FontForge.Classes
             if (font == null || glyph == null || string.IsNullOrWhiteSpace(glyph.Char))
                 return false;
 
-            return !string.IsNullOrWhiteSpace(FindGlyphImagePath(font, glyph.Char, allowLookAlikeFallback: false));
+            return !string.IsNullOrWhiteSpace(
+                FindGlyphImagePath(font, glyph.Char, allowLookAlikeFallback: false));
         }
 
         public static List<string> GetDrawableChars(CreatedFont font)
@@ -93,7 +97,9 @@ namespace FontForge.Classes
                 .ToList();
         }
 
-        private static IEnumerable<string> BuildCandidateSymbols(string symbol, bool allowLookAlikeFallback)
+        private static IEnumerable<string> BuildCandidateSymbols(
+            string symbol,
+            bool allowLookAlikeFallback)
         {
             yield return symbol;
 
@@ -112,9 +118,6 @@ namespace FontForge.Classes
             if (glyph == null || glyph.Variants == null || glyph.Variants.Count == 0)
                 return null;
 
-            // Берём именно варианты из окна "Варианты буквы".
-            // Сначала тот, который отмечен красной точкой IsDefault.
-            // Потом остальные, самые новые.
             var orderedVariants = glyph.Variants
                 .OrderByDescending(v => v.IsDefault)
                 .ThenByDescending(v => v.UpdatedAt)
@@ -134,12 +137,11 @@ namespace FontForge.Classes
 
         private static string? ResolveVariantPath(Guid fontId, string ch, GlyphVariant variant)
         {
-            // 1. Главный путь, который хранится в варианте буквы.
+            // 1. Путь, который хранится в варианте буквы
             if (IsGoodPngFile(variant.ImagePath))
                 return variant.ImagePath;
 
-            // 2. Если ImagePath почему-то пустой или устарел,
-            // строим путь так же, как GlyphEditorWindow сохраняет PNG.
+            // 2. Стандартный путь
             try
             {
                 string expectedPath = FontStorage.BuildVariantFilePath(fontId, ch, variant.Id);
@@ -149,10 +151,10 @@ namespace FontForge.Classes
             }
             catch
             {
-                // не падаем
+                // Не падаем
             }
 
-            // 3. Если имя файла чуть изменилось, ищем по id варианта.
+            // 3. Поиск по id варианта
             try
             {
                 string glyphsFolder = FontStorage.GetGlyphsFolder(fontId);
@@ -173,7 +175,7 @@ namespace FontForge.Classes
             }
             catch
             {
-                // не падаем
+                // Не падаем
             }
 
             return null;
@@ -194,7 +196,6 @@ namespace FontForge.Classes
 
                 var info = new FileInfo(path);
 
-                // PNG не может быть совсем маленьким.
                 return info.Length > 20;
             }
             catch

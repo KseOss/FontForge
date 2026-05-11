@@ -5,7 +5,6 @@ namespace FontForge
 {
     public partial class App : Application
     {
-        // true = тёмная, false = светлая
         public static bool IsDarkTheme { get; private set; } = false;
 
         public static event Action? ThemeChanged;
@@ -38,13 +37,9 @@ namespace FontForge
                 return;
 
             if (IsDarkTheme)
-            {
                 ApplyBrushSet("Dark");
-            }
             else
-            {
                 ApplyBrushSet("Light");
-            }
 
             ThemeChanged?.Invoke();
         }
@@ -56,11 +51,12 @@ namespace FontForge
             SetBrush("SurfaceAltBrush", $"{prefix}SurfaceAltBrush");
             SetBrush("CardBrush", $"{prefix}CardBrush");
             SetBrush("InputBackgroundBrush", $"{prefix}InputBackgroundBrush");
+
             SetBrush("PreviewBackgroundBrush", $"{prefix}PreviewBackgroundBrush");
+            SetBrush("PreviewTextBrush", $"{prefix}PreviewTextBrush");
 
             SetBrush("TextBrush", $"{prefix}TextBrush");
             SetBrush("SecondaryTextBrush", $"{prefix}SecondaryTextBrush");
-            SetBrush("PreviewTextBrush", $"{prefix}PreviewTextBrush");
 
             SetBrush("BorderBrush", $"{prefix}BorderBrush");
             SetBrush("MutedBorderBrush", $"{prefix}MutedBorderBrush");

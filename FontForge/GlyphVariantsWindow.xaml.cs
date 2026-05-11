@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FontForge.Classes;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,7 +8,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using FontForge.Classes;
 
 namespace FontForge
 {
@@ -25,6 +25,7 @@ namespace FontForge
         public GlyphVariantsWindow(Guid fontId, string ch)
         {
             InitializeComponent();
+
             _fontId = fontId;
             _ch = ch;
 
@@ -43,7 +44,10 @@ namespace FontForge
             App.ThemeChanged -= OnThemeChanged;
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
 
         private void OnThemeChanged()
         {
@@ -52,7 +56,9 @@ namespace FontForge
 
         private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_isThemeAnimating) return;
+            if (_isThemeAnimating)
+                return;
+
             _isThemeAnimating = true;
             ThemeToggleButton.IsEnabled = false;
 
@@ -60,11 +66,13 @@ namespace FontForge
             bool wantDark = !wantLight;
 
             var fadeTo = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140));
+
             fadeTo.Completed += (_, __) =>
             {
                 App.SetTheme(wantDark);
 
                 var fadeBack = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(180));
+
                 fadeBack.Completed += (___, ____) =>
                 {
                     ThemeToggleButton.IsEnabled = true;
@@ -90,46 +98,55 @@ namespace FontForge
             }
 
             _glyph = _font.Glyphs.FirstOrDefault(g => g.Char == _ch);
+
             if (_glyph == null)
             {
-                _glyph = new GlyphEntry { Char = _ch, UpdatedAt = DateTime.Now };
+                _glyph = new GlyphEntry
+                {
+                    Char = _ch,
+                    UpdatedAt = DateTime.Now
+                };
+
                 _font.Glyphs.Add(_glyph);
                 SaveAll();
             }
 
             FontStorage.NormalizeDefaults(_font, _ch);
 
-            TitleText.Text = $"Варианты буквы \"{_ch}\"";
+            TitleText.Text = $"Варианты буквы «{_ch}»";
         }
 
         private void SaveAll()
         {
-            if (_font == null) return;
+            if (_font == null)
+                return;
 
-            var idx = _allFonts.FindIndex(x => x.Id == _font.Id);
-            if (idx >= 0) _allFonts[idx] = _font;
+            int idx = _allFonts.FindIndex(x => x.Id == _font.Id);
+
+            if (idx >= 0)
+                _allFonts[idx] = _font;
 
             FontStorage.SaveFonts(_allFonts);
         }
 
         private void Build()
         {
-            if (_font == null || _glyph == null) return;
+            if (_font == null || _glyph == null)
+                return;
 
-            int total = _glyph.Variants.Count;
-            CountText.Text = $"Количество вариантов: {total}";
+            CountText.Text = $"Количество вариантов: {_glyph.Variants.Count}";
 
             VariantsPanel.Children.Clear();
 
-            foreach (var v in _glyph.Variants.OrderByDescending(x => x.CreatedAt))
+            foreach (GlyphVariant variant in _glyph.Variants.OrderByDescending(x => x.CreatedAt))
             {
-                VariantsPanel.Children.Add(BuildVariantCard(v));
+                VariantsPanel.Children.Add(BuildVariantCard(variant));
             }
 
             VariantsPanel.Children.Add(BuildAddCard());
         }
 
-        private UIElement BuildVariantCard(GlyphVariant v)
+        private UIElement BuildVariantCard(GlyphVariant variant)
         {
             var card = new Border
             {
@@ -138,12 +155,13 @@ namespace FontForge
             };
 
             var grid = new Grid();
+
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(220) });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            // ===== верх: буква + удалить
             var top = new Grid();
+
             top.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
@@ -152,26 +170,27 @@ namespace FontForge
                 Text = _ch,
                 FontSize = 16,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)Application.Current.Resources["TextBrush"]
+                Foreground = GetTextBrush()
             };
 
-            var delBtn = new Button
+            var deleteButton = new Button
             {
                 Style = (Style)FindResource("IconButton"),
                 Content = "🗑️",
                 ToolTip = "Удалить вариант",
-                Tag = v.Id
+                Tag = variant.Id
             };
-            delBtn.Click += DeleteVariant_Click;
+
+            deleteButton.Click += DeleteVariant_Click;
 
             top.Children.Add(chText);
-            Grid.SetColumn(delBtn, 1);
-            top.Children.Add(delBtn);
+
+            Grid.SetColumn(deleteButton, 1);
+            top.Children.Add(deleteButton);
 
             grid.Children.Add(top);
 
-            // ===== картинка + красная точка если вариант дефолтный
-            var imgBorder = new Border
+            var imageBorder = new Border
             {
                 CornerRadius = new CornerRadius(14),
                 Background = Brushes.White,
@@ -179,35 +198,43 @@ namespace FontForge
                 BorderThickness = new Thickness(1),
                 Margin = new Thickness(0, 12, 0, 0)
             };
-            Grid.SetRow(imgBorder, 1);
 
-            var img = new Image
+            Grid.SetRow(imageBorder, 1);
+
+            var image = new Image
             {
                 Stretch = Stretch.Uniform,
                 Margin = new Thickness(10)
             };
 
-            if (!string.IsNullOrWhiteSpace(v.ImagePath) && File.Exists(v.ImagePath))
+            if (!string.IsNullOrWhiteSpace(variant.ImagePath) && File.Exists(variant.ImagePath))
             {
                 try
                 {
                     var bmp = new BitmapImage();
+
                     bmp.BeginInit();
                     bmp.CacheOption = BitmapCacheOption.OnLoad;
-                    bmp.UriSource = new Uri(v.ImagePath, UriKind.Absolute);
+                    bmp.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+                    bmp.UriSource = new Uri(variant.ImagePath, UriKind.Absolute);
                     bmp.EndInit();
-                    img.Source = bmp;
+                    bmp.Freeze();
+
+                    image.Source = bmp;
                 }
-                catch { }
+                catch
+                {
+                    // Если картинка не загрузилась, карточка останется пустой.
+                }
             }
 
-            imgBorder.Child = img;
+            imageBorder.Child = image;
 
-            // overlay чтобы поставить точку
             var overlay = new Grid();
-            overlay.Children.Add(imgBorder);
 
-            if (v.IsDefault)
+            overlay.Children.Add(imageBorder);
+
+            if (variant.IsDefault)
             {
                 var dot = new TextBlock
                 {
@@ -219,49 +246,62 @@ namespace FontForge
                     VerticalAlignment = VerticalAlignment.Top,
                     Margin = new Thickness(0, 6, 10, 0)
                 };
+
                 overlay.Children.Add(dot);
             }
 
-            var wrap = new Border { Background = Brushes.Transparent, Child = overlay };
-            Grid.SetRow(wrap, 1);
-            grid.Children.Add(wrap);
+            var imageWrap = new Border
+            {
+                Background = Brushes.Transparent,
+                Child = overlay
+            };
 
-            // ===== кнопки
-            var buttons = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
+            Grid.SetRow(imageWrap, 1);
+            grid.Children.Add(imageWrap);
+
+            var buttons = new StackPanel
+            {
+                Margin = new Thickness(0, 12, 0, 0)
+            };
+
             Grid.SetRow(buttons, 2);
 
-            var edit = new Button
+            var editButton = new Button
             {
                 Style = (Style)FindResource("ActionButton"),
                 Content = "РЕДАКТИРОВАТЬ",
-                Tag = v.Id
+                Tag = variant.Id
             };
-            edit.Click += Edit_Click;
 
-            var makeDef = new Button
+            editButton.Click += Edit_Click;
+
+            var makeDefaultButton = new Button
             {
                 Style = (Style)FindResource("ActionButton"),
                 Content = "ИСПОЛЬЗОВАТЬ В ШРИФТЕ",
-                Tag = v.Id,
-                IsEnabled = !v.IsDefault
+                Tag = variant.Id,
+                IsEnabled = !variant.IsDefault
             };
-            makeDef.Click += MakeDefault_Click;
 
-            var copy = new Button
+            makeDefaultButton.Click += MakeDefault_Click;
+
+            var copyButton = new Button
             {
                 Style = (Style)FindResource("ActionButton"),
                 Content = "СКОПИРОВАТЬ",
-                Tag = v.Id
+                Tag = variant.Id
             };
-            copy.Click += Copy_Click;
 
-            buttons.Children.Add(edit);
-            buttons.Children.Add(makeDef);
-            buttons.Children.Add(copy);
+            copyButton.Click += Copy_Click;
+
+            buttons.Children.Add(editButton);
+            buttons.Children.Add(makeDefaultButton);
+            buttons.Children.Add(copyButton);
 
             grid.Children.Add(buttons);
 
             card.Child = grid;
+
             return card;
         }
 
@@ -272,13 +312,13 @@ namespace FontForge
                 Width = 120,
                 Height = 120,
                 CornerRadius = new CornerRadius(18),
-                Background = new SolidColorBrush(Color.FromArgb(0x22, 0, 0, 0)),
-                BorderBrush = new SolidColorBrush(Color.FromArgb(0x18, 0, 0, 0)),
+                Background = GetSecondaryButtonBrush(),
+                BorderBrush = GetBorderBrush(),
                 BorderThickness = new Thickness(1),
                 VerticalAlignment = VerticalAlignment.Top
             };
 
-            var btn = new Button
+            var button = new Button
             {
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
@@ -290,26 +330,31 @@ namespace FontForge
                     FontWeight = FontWeights.SemiBold,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = (Brush)Application.Current.Resources["TextBrush"]
+                    Foreground = GetTextBrush()
                 }
             };
-            btn.Click += AddVariant_Click;
 
-            wrap.Child = btn;
+            button.Click += AddVariant_Click;
+
+            wrap.Child = button;
             return wrap;
         }
+
         private void MakeVariantDefault(Guid variantId)
         {
-            if (_glyph == null) return;
+            if (_glyph == null)
+                return;
 
-            foreach (var variant in _glyph.Variants)
+            foreach (GlyphVariant variant in _glyph.Variants)
             {
                 variant.IsDefault = variant.Id == variantId;
             }
         }
+
         private void AddVariant_Click(object sender, RoutedEventArgs e)
         {
-            if (_font == null || _glyph == null) return;
+            if (_font == null || _glyph == null)
+                return;
 
             var variant = new GlyphVariant
             {
@@ -319,7 +364,10 @@ namespace FontForge
                 UpdatedAt = DateTime.Now
             };
 
-            var editor = new GlyphEditorWindow(_font.Id, _ch, variant.Id) { Owner = this };
+            var editor = new GlyphEditorWindow(_font.Id, _ch, variant.Id)
+            {
+                Owner = this
+            };
 
             if (editor.ShowDialog() == true)
             {
@@ -328,9 +376,6 @@ namespace FontForge
 
                 _glyph.Variants.Add(variant);
 
-                // ВАЖНО:
-                // новый нарисованный вариант сразу становится тем,
-                // который используется в шрифте, предпросмотре и PDF
                 MakeVariantDefault(variant.Id);
 
                 _glyph.UpdatedAt = DateTime.Now;
@@ -343,24 +388,31 @@ namespace FontForge
 
         private void Edit_Click(object sender, RoutedEventArgs e)
         {
-            if (_font == null || _glyph == null) return;
-            if (sender is not Button btn) return;
+            if (_font == null || _glyph == null)
+                return;
 
-            if (btn.Tag is not Guid id) return;
+            if (sender is not Button button)
+                return;
 
-            var v = _glyph.Variants.FirstOrDefault(x => x.Id == id);
-            if (v == null) return;
+            if (button.Tag is not Guid id)
+                return;
 
-            var editor = new GlyphEditorWindow(_font.Id, _ch, v.Id) { Owner = this };
+            GlyphVariant? variant = _glyph.Variants.FirstOrDefault(x => x.Id == id);
+
+            if (variant == null)
+                return;
+
+            var editor = new GlyphEditorWindow(_font.Id, _ch, variant.Id)
+            {
+                Owner = this
+            };
 
             if (editor.ShowDialog() == true)
             {
-                v.ImagePath = editor.SavedImagePath ?? v.ImagePath;
-                v.UpdatedAt = DateTime.Now;
+                variant.ImagePath = editor.SavedImagePath ?? variant.ImagePath;
+                variant.UpdatedAt = DateTime.Now;
 
-                // ВАЖНО:
-                // отредактированный вариант сразу становится основным
-                MakeVariantDefault(v.Id);
+                MakeVariantDefault(variant.Id);
 
                 _glyph.UpdatedAt = DateTime.Now;
 
@@ -372,13 +424,19 @@ namespace FontForge
 
         private void MakeDefault_Click(object sender, RoutedEventArgs e)
         {
-            if (_font == null || _glyph == null) return;
-            if (sender is not Button btn) return;
+            if (_font == null || _glyph == null)
+                return;
 
-            if (btn.Tag is not Guid id) return;
+            if (sender is not Button button)
+                return;
 
-            foreach (var v in _glyph.Variants)
-                v.IsDefault = (v.Id == id);
+            if (button.Tag is not Guid id)
+                return;
+
+            foreach (GlyphVariant variant in _glyph.Variants)
+            {
+                variant.IsDefault = variant.Id == id;
+            }
 
             FontStorage.NormalizeDefaults(_font, _ch);
             SaveAll();
@@ -387,15 +445,21 @@ namespace FontForge
 
         private void Copy_Click(object sender, RoutedEventArgs e)
         {
-            if (_font == null || _glyph == null) return;
-            if (sender is not Button btn) return;
+            if (_font == null || _glyph == null)
+                return;
 
-            if (btn.Tag is not Guid id) return;
+            if (sender is not Button button)
+                return;
 
-            var src = _glyph.Variants.FirstOrDefault(x => x.Id == id);
-            if (src == null) return;
+            if (button.Tag is not Guid id)
+                return;
 
-            var newVar = new GlyphVariant
+            GlyphVariant? source = _glyph.Variants.FirstOrDefault(x => x.Id == id);
+
+            if (source == null)
+                return;
+
+            var newVariant = new GlyphVariant
             {
                 Id = Guid.NewGuid(),
                 IsDefault = false,
@@ -403,22 +467,30 @@ namespace FontForge
                 UpdatedAt = DateTime.Now
             };
 
-            if (!string.IsNullOrWhiteSpace(src.ImagePath) && File.Exists(src.ImagePath))
+            if (!string.IsNullOrWhiteSpace(source.ImagePath) && File.Exists(source.ImagePath))
             {
-                var newPath = FontStorage.BuildVariantFilePath(_font.Id, _ch, newVar.Id);
+                string newPath = FontStorage.BuildVariantFilePath(_font.Id, _ch, newVariant.Id);
+
                 try
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(newPath) ?? "");
-                    File.Copy(src.ImagePath, newPath, true);
-                    newVar.ImagePath = newPath;
+                    File.Copy(source.ImagePath, newPath, true);
+
+                    string sourceIsf = Path.ChangeExtension(source.ImagePath, ".isf");
+                    string newIsf = Path.ChangeExtension(newPath, ".isf");
+
+                    if (File.Exists(sourceIsf))
+                        File.Copy(sourceIsf, newIsf, true);
+
+                    newVariant.ImagePath = newPath;
                 }
                 catch
                 {
-                    newVar.ImagePath = "";
+                    newVariant.ImagePath = "";
                 }
             }
 
-            _glyph.Variants.Add(newVar);
+            _glyph.Variants.Add(newVariant);
             _glyph.UpdatedAt = DateTime.Now;
 
             SaveAll();
@@ -427,36 +499,65 @@ namespace FontForge
 
         private void DeleteVariant_Click(object sender, RoutedEventArgs e)
         {
-            if (_font == null || _glyph == null) return;
-            if (sender is not Button btn) return;
+            if (_font == null || _glyph == null)
+                return;
 
-            if (btn.Tag is not Guid id) return;
+            if (sender is not Button button)
+                return;
 
-            var v = _glyph.Variants.FirstOrDefault(x => x.Id == id);
-            if (v == null) return;
+            if (button.Tag is not Guid id)
+                return;
 
-            var result = MessageBox.Show(
+            GlyphVariant? variant = _glyph.Variants.FirstOrDefault(x => x.Id == id);
+
+            if (variant == null)
+                return;
+
+            MessageBoxResult result = MessageBox.Show(
                 "Удалить этот вариант буквы?",
                 "Подтверждение",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            if (result != MessageBoxResult.Yes) return;
+            if (result != MessageBoxResult.Yes)
+                return;
 
             try
             {
-                if (!string.IsNullOrWhiteSpace(v.ImagePath) && File.Exists(v.ImagePath))
-                    File.Delete(v.ImagePath);
+                if (!string.IsNullOrWhiteSpace(variant.ImagePath) && File.Exists(variant.ImagePath))
+                    File.Delete(variant.ImagePath);
+
+                string isfPath = Path.ChangeExtension(variant.ImagePath, ".isf");
+
+                if (!string.IsNullOrWhiteSpace(isfPath) && File.Exists(isfPath))
+                    File.Delete(isfPath);
             }
-            catch { }
+            catch
+            {
+                // Не мешаем удалению записи, если файл занят.
+            }
 
-            _glyph.Variants.Remove(v);
+            _glyph.Variants.Remove(variant);
 
-            // если удалили используемый — назначим другой
             FontStorage.NormalizeDefaults(_font, _ch);
 
             SaveAll();
             Build();
+        }
+
+        private static Brush GetTextBrush()
+        {
+            return Application.Current.Resources["TextBrush"] as Brush ?? Brushes.Black;
+        }
+
+        private static Brush GetBorderBrush()
+        {
+            return Application.Current.Resources["BorderBrush"] as Brush ?? Brushes.LightGray;
+        }
+
+        private static Brush GetSecondaryButtonBrush()
+        {
+            return Application.Current.Resources["SecondaryButtonBackgroundBrush"] as Brush ?? Brushes.LightGray;
         }
     }
 }

@@ -67,7 +67,7 @@
         <Style x:Key="PrettySlider" TargetType="Slider">
             <Setter Property="Height" Value="34"/>
             <Setter Property="Margin" Value="0,6,0,0"/>
-            <Setter Property="Foreground" Value="#2D8CFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="Background" Value="#1A000000"/>
             <Setter Property="Template">
                 <Setter.Value>

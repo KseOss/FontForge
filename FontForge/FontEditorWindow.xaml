@@ -15,7 +15,6 @@
 
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
-        <!-- ===== ToggleSwitch темы ===== -->
         <Style x:Key="ThemeToggleSwitchStyle" TargetType="ToggleButton">
             <Setter Property="Width" Value="70"/>
             <Setter Property="Height" Value="34"/>
@@ -53,8 +52,8 @@
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="#2D8CFF"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="#2D8CFF"/>
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                 <Setter TargetName="IconText" Property="Text" Value="🔆"/>
 
                                 <Trigger.EnterActions>
@@ -93,7 +92,6 @@
             </Setter>
         </Style>
 
-        <!-- ===== Карточка ===== -->
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="16"/>
@@ -102,16 +100,18 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
-        <!-- ===== Основная кнопка ===== -->
         <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Height" Value="46"/>
-            <Setter Property="Padding" Value="22,0"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinWidth" Value="140"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -119,7 +119,9 @@
                                 CornerRadius="23"
                                 Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"/>
                         </Border>
 
                         <ControlTemplate.Triggers>
@@ -140,7 +142,6 @@
             </Setter>
         </Style>
 
-        <!-- ===== Красная кнопка ===== -->
         <Style x:Key="DangerButton" TargetType="Button">
             <Setter Property="Height" Value="36"/>
             <Setter Property="Width" Value="150"/>
@@ -148,7 +149,7 @@
             <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource DangerTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -157,7 +158,8 @@
                                 Background="{TemplateBinding Background}"
                                 CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"
+                                              Margin="8,0"/>
                         </Border>
 
                         <ControlTemplate.Triggers>
@@ -174,7 +176,6 @@
             </Setter>
         </Style>
 
-        <!-- ===== Slider ===== -->
         <Style x:Key="PrettySlider" TargetType="Slider">
             <Setter Property="Height" Value="32"/>
             <Setter Property="Margin" Value="0,8,0,0"/>
@@ -265,7 +266,6 @@
             </Setter>
         </Style>
 
-        <!-- ===== Плитка символа ===== -->
         <Style x:Key="GlyphTile" TargetType="Button">
             <Setter Property="Width" Value="110"/>
             <Setter Property="Height" Value="120"/>
@@ -309,7 +309,6 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ===== Header ===== -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -335,7 +334,6 @@
                           Click="ThemeToggleButton_Click"/>
         </Grid>
 
-        <!-- ===== Preview ===== -->
         <Border Grid.Row="1"
                 Margin="0,18,0,0"
                 Style="{StaticResource Card}">
@@ -365,7 +363,6 @@
                             ValueChanged="PreviewSizeSlider_ValueChanged"/>
                 </StackPanel>
 
-                <!-- Ввод + Очистить -->
                 <Grid Grid.Row="2"
                       Margin="0,14,0,0">
                     <Grid.ColumnDefinitions>
@@ -399,7 +396,6 @@
                             Click="ClearText_Click"/>
                 </Grid>
 
-                <!-- Рендер предпросмотра -->
                 <Border Grid.Row="3"
                         Margin="0,14,0,0"
                         CornerRadius="14"
@@ -416,7 +412,6 @@
             </Grid>
         </Border>
 
-        <!-- ===== Glyphs ===== -->
         <Border Grid.Row="2"
                 Margin="0,18,0,0"
                 Style="{StaticResource Card}">
@@ -497,7 +492,6 @@
             </Grid>
         </Border>
 
-        <!-- ===== Bottom buttons ===== -->
         <Grid Grid.Row="3"
               Margin="0,18,0,0">
             <Grid.ColumnDefinitions>
@@ -514,20 +508,26 @@
                     Click="Back_Click"/>
 
             <Button Grid.Column="2"
-                    Content="+ Нарисовать новый символ"
+                    Content="Новый символ"
+                    ToolTip="Нарисовать новый символ"
                     Style="{StaticResource PrimaryButton}"
+                    Width="170"
                     Click="AddGlyph_Click"/>
 
             <Button Grid.Column="3"
                     Margin="10,0,0,0"
                     Content="Экспорт TTF/OTF"
+                    ToolTip="Сохранить шрифт в TTF или OTF"
                     Style="{StaticResource PrimaryButton}"
+                    Width="170"
                     Click="ExportFontFile_Click"/>
 
             <Button Grid.Column="4"
                     Margin="10,0,0,0"
-                    Content="Открыть редактор текста"
+                    Content="Редактор текста"
+                    ToolTip="Открыть редактор текста и PDF"
                     Style="{StaticResource PrimaryButton}"
+                    Width="180"
                     Click="OpenDocumentEditor_Click"/>
         </Grid>
 

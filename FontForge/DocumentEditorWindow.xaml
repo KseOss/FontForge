@@ -10,12 +10,75 @@
         Icon="/Images/Logo.png"
         Loaded="Window_Loaded">
 
+    <Window.Resources>
+
+        <!-- Фон листа в клетку.
+             Это только предпросмотр, в PDF сетка не сохраняется. -->
+        <DrawingBrush x:Key="PaperGridBrush"
+                      TileMode="Tile"
+                      Viewport="0,0,96,96"
+                      ViewportUnits="Absolute"
+                      Stretch="None">
+
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+
+                    <!-- Белый фон листа -->
+                    <GeometryDrawing Brush="#FFFFFF">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,96,96"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                    <!-- Маленькие клетки -->
+                    <GeometryDrawing>
+                        <GeometryDrawing.Pen>
+                            <Pen Brush="#E8EDF5" Thickness="0.8"/>
+                        </GeometryDrawing.Pen>
+
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <LineGeometry StartPoint="24,0" EndPoint="24,96"/>
+                                <LineGeometry StartPoint="48,0" EndPoint="48,96"/>
+                                <LineGeometry StartPoint="72,0" EndPoint="72,96"/>
+
+                                <LineGeometry StartPoint="0,24" EndPoint="96,24"/>
+                                <LineGeometry StartPoint="0,48" EndPoint="96,48"/>
+                                <LineGeometry StartPoint="0,72" EndPoint="96,72"/>
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                    <!-- Более заметные большие клетки -->
+                    <GeometryDrawing>
+                        <GeometryDrawing.Pen>
+                            <Pen Brush="#D7E0EF" Thickness="1.1"/>
+                        </GeometryDrawing.Pen>
+
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <LineGeometry StartPoint="0,0" EndPoint="0,96"/>
+                                <LineGeometry StartPoint="96,0" EndPoint="96,96"/>
+
+                                <LineGeometry StartPoint="0,0" EndPoint="96,0"/>
+                                <LineGeometry StartPoint="0,96" EndPoint="96,96"/>
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+    </Window.Resources>
+
     <Grid Margin="24">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="390"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Левая панель -->
         <Border Style="{StaticResource AppCard}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
@@ -27,8 +90,8 @@
                                Style="{StaticResource AppLabelText}"/>
 
                     <ComboBox x:Name="FontsCombo"
-                        Style="{StaticResource AppComboBox}"
-                        SelectionChanged="FontsCombo_SelectionChanged"/>
+                              Style="{StaticResource AppComboBox}"
+                              SelectionChanged="FontsCombo_SelectionChanged"/>
 
                     <TextBlock Margin="0,14,0,6"
                                Text="Текст"
@@ -52,11 +115,11 @@
                                Style="{StaticResource AppLabelText}"/>
 
                     <Slider x:Name="PreviewSizeSlider"
-                        Style="{StaticResource AppSlider}"
-                        Minimum="18"
-                        Maximum="140"
-                        Value="64"
-                        ValueChanged="TypographySettings_Changed"/>
+                            Style="{StaticResource AppSlider}"
+                            Minimum="18"
+                            Maximum="140"
+                            Value="64"
+                            ValueChanged="TypographySettings_Changed"/>
 
                     <TextBlock Margin="0,12,0,0"
                                Text="Межбуквенный интервал"
@@ -148,13 +211,47 @@
             </ScrollViewer>
         </Border>
 
+        <!-- Правая область предпросмотра -->
         <Border Grid.Column="1"
                 Margin="18,0,0,0"
-                Style="{StaticResource AppPreviewPanel}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
-                <StackPanel x:Name="PreviewRoot" Margin="18"/>
-            </ScrollViewer>
+                CornerRadius="18"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1">
+
+            <Grid Margin="16">
+
+                <!-- Лист с клетками -->
+                <Border CornerRadius="14"
+                        Background="{StaticResource PaperGridBrush}"
+                        BorderBrush="#D6DAE2"
+                        BorderThickness="1">
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Background="Transparent">
+
+                        <StackPanel x:Name="PreviewRoot"
+                                    Margin="24"/>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Маленькая подпись -->
+                <Border HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="0,10,10,0"
+                        Padding="10,5"
+                        CornerRadius="12"
+                        Background="#CCFFFFFF"
+                        BorderBrush="#D6DAE2"
+                        BorderThickness="1">
+
+                    <TextBlock Text="Предпросмотр страницы"
+                               FontSize="12"
+                               Foreground="#667085"/>
+                </Border>
+
+            </Grid>
         </Border>
     </Grid>
 </Window>
