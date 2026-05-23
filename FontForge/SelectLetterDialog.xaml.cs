@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
 namespace FontForge
@@ -16,75 +17,160 @@ namespace FontForge
         public SelectLetterDialog(HashSet<string> usedChars)
         {
             InitializeComponent();
+
             Height += 20;
             Width += 20;
+
             _used = usedChars ?? new HashSet<string>();
+
             BuildLetters();
         }
 
         private void BuildLetters()
         {
-            var letters = new List<string>();
+            LettersHost.Children.Clear();
 
-            letters.AddRange("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ".Select(c => c.ToString()));
-            letters.AddRange("абвгдеёжзийклмнопрстуфхцчшщъыьэюя".Select(c => c.ToString()));
-            letters.AddRange("0123456789".Select(c => c.ToString()));
+            AddGroup(
+                "Русские буквы",
+                BuildCharsFromString("АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя"));
 
-            LettersGrid.Children.Clear();
+            AddGroup(
+                "Английские буквы",
+                BuildCharsFromString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"));
 
-            foreach (string ch in letters)
+            AddGroup(
+                "Цифры",
+                BuildCharsFromString("0123456789"));
+
+            AddGroup(
+                "Специальные символы",
+                BuildSpecialSymbols());
+        }
+
+        private static List<string> BuildCharsFromString(string text)
+        {
+            return text
+                .Select(c => c.ToString())
+                .ToList();
+        }
+
+        private static List<string> BuildSpecialSymbols()
+        {
+            return new List<string>
             {
-                bool isUsed = _used.Contains(ch);
+                "!",
+                "\"",
+                "№",
+                ";",
+                "%",
+                ":",
+                "?",
+                "*",
+                "(",
+                ")",
+                "~",
+                "`",
+                "@",
+                "#",
+                "$",
+                "^",
+                "&",
+                "|",
+                "\\",
+                "/",
+                "<",
+                ">",
+                ".",
+                "+"
+            };
+        }
 
-                var letterText = new TextBlock
-                {
-                    Text = ch,
-                    FontSize = 18,
-                    FontWeight = FontWeights.SemiBold,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    TextAlignment = TextAlignment.Center
-                };
+        private void AddGroup(string title, List<string> symbols)
+        {
+            symbols = symbols
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Distinct()
+                .ToList();
 
-                if (isUsed)
-                {
-                    letterText.SetResourceReference(TextBlock.ForegroundProperty, "SecondaryTextBrush");
-                    letterText.Opacity = 0.85;
-                }
-                else
-                {
-                    letterText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-                    letterText.Opacity = 1;
-                }
+            if (symbols.Count == 0)
+                return;
 
-                var button = new Button
-                {
-                    Content = letterText,
-                    Tag = ch,
-                    Style = (Style)FindResource("LetterTileButton"),
-                    Opacity = isUsed ? 0.55 : 1,
-                    Cursor = isUsed
-                        ? System.Windows.Input.Cursors.Arrow
-                        : System.Windows.Input.Cursors.Hand,
-                    ToolTip = isUsed
-                        ? $"Символ «{ch}» уже добавлен"
-                        : $"Выбрать символ «{ch}»"
-                };
+            var titleText = new TextBlock
+            {
+                Text = title,
+                Style = (Style)FindResource("GroupTitleText")
+            };
 
-                if (isUsed)
-                {
-                    button.SetResourceReference(Button.BackgroundProperty, "InputBackgroundBrush");
-                    button.SetResourceReference(Button.BorderBrushProperty, "MutedBorderBrush");
-                }
-                else
-                {
-                    button.SetResourceReference(Button.BackgroundProperty, "SurfaceAltBrush");
-                    button.SetResourceReference(Button.BorderBrushProperty, "MutedBorderBrush");
-                    button.Click += Letter_Click;
-                }
+            LettersHost.Children.Add(titleText);
 
-                LettersGrid.Children.Add(button);
+            var grid = new UniformGrid
+            {
+                Columns = 8,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 0, 0, 6)
+            };
+
+            foreach (string ch in symbols)
+            {
+                grid.Children.Add(CreateSymbolButton(ch));
             }
+
+            LettersHost.Children.Add(grid);
+        }
+
+        private Button CreateSymbolButton(string ch)
+        {
+            bool isUsed = _used.Contains(ch);
+
+            var letterText = new TextBlock
+            {
+                Text = ch,
+                FontSize = 18,
+                FontWeight = FontWeights.SemiBold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextAlignment = TextAlignment.Center
+            };
+
+            if (isUsed)
+            {
+                letterText.SetResourceReference(TextBlock.ForegroundProperty, "SecondaryTextBrush");
+                letterText.Opacity = 0.85;
+            }
+            else
+            {
+                letterText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+                letterText.Opacity = 1;
+            }
+
+            var button = new Button
+            {
+                Content = letterText,
+                Tag = ch,
+                Style = (Style)FindResource("LetterTileButton"),
+                Opacity = isUsed ? 0.55 : 1,
+                Cursor = isUsed
+                    ? System.Windows.Input.Cursors.Arrow
+                    : System.Windows.Input.Cursors.Hand,
+                ToolTip = isUsed
+                    ? $"Символ «{ch}» уже добавлен"
+                    : $"Выбрать символ «{ch}»"
+            };
+
+            if (isUsed)
+            {
+                button.SetResourceReference(Button.BackgroundProperty, "InputBackgroundBrush");
+                button.SetResourceReference(Button.BorderBrushProperty, "MutedBorderBrush");
+                button.IsEnabled = false;
+            }
+            else
+            {
+                button.SetResourceReference(Button.BackgroundProperty, "SurfaceAltBrush");
+                button.SetResourceReference(Button.BorderBrushProperty, "MutedBorderBrush");
+                button.Click += Letter_Click;
+            }
+
+            return button;
         }
 
         private void Letter_Click(object sender, RoutedEventArgs e)
@@ -94,7 +180,7 @@ namespace FontForge
 
             string? ch = button.Tag?.ToString();
 
-            if (string.IsNullOrWhiteSpace(ch))
+            if (string.IsNullOrEmpty(ch))
                 return;
 
             if (_used.Contains(ch))
@@ -141,13 +227,12 @@ namespace FontForge
 
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(SelectedChar))
+            if (string.IsNullOrEmpty(SelectedChar))
             {
-                MessageBox.Show(
+                AppDialog.Info(
+                    this,
                     "Выберите символ.",
-                    "Выбор символа",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    "Выбор символа");
 
                 return;
             }
