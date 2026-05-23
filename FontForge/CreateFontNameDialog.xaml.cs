@@ -46,7 +46,7 @@ namespace FontForge
 
                 HeaderText.Text = "Создать новый шрифт";
                 DescriptionText.Text = "Введите название, которое будет отображаться в списке ваших шрифтов.";
-                HintText.Text = "Например: Мой почерк, Pisun, Шрифт Ксении";
+                HintText.Text = "Например: Мой почерк";
                 OkButton.Content = "Создать";
 
                 NameBox.Text = "";
