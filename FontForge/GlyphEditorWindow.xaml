@@ -292,7 +292,7 @@
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource TextBrush}"/>
 
-                    <TextBlock Text="Рисуйте букву так, чтобы её хвостики подходили к линиям соединения."
+                    <TextBlock Text="Рисуйте букву, стирайте лишнее или корректируйте форму по точкам."
                                Margin="0,8,0,0"
                                FontSize="12"
                                TextWrapping="Wrap"
@@ -355,7 +355,19 @@
                                 <RadioButton x:Name="ModeEditRadio"
                                              Style="{StaticResource AppRadioButton}"
                                              Content="Редактирование линий"
+                                             Checked="ModeRadio_Checked"
+                                             Margin="0,0,0,10"/>
+
+                                <RadioButton x:Name="ModeCurveRadio"
+                                             Style="{StaticResource AppRadioButton}"
+                                             Content="Коррекция кривой"
                                              Checked="ModeRadio_Checked"/>
+
+                                <TextBlock Text="В режиме коррекции нажмите на линию и двигайте опорные точки."
+                                           Margin="0,10,0,0"
+                                           TextWrapping="Wrap"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </StackPanel>
                         </Border>
 
@@ -414,6 +426,13 @@
                                         Style="{StaticResource DangerButton}"
                                         Click="DeleteSelected_Click"
                                         Visibility="Collapsed"/>
+
+                                <Button x:Name="DeleteCurveButton"
+                                        Content="Удалить выбранную кривую"
+                                        Margin="0,10,0,0"
+                                        Style="{StaticResource DangerButton}"
+                                        Click="DeleteCurve_Click"
+                                        Visibility="Collapsed"/>
                             </StackPanel>
                         </Border>
 
@@ -468,12 +487,6 @@
                                         Value="-35"
                                         TickFrequency="1"
                                         ValueChanged="BrushSettings_Changed"/>
-
-                                <TextBlock Text="Наклон используется только для каллиграфической кисти."
-                                           Margin="0,8,0,0"
-                                           TextWrapping="Wrap"
-                                           FontSize="12"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </StackPanel>
                         </Border>
 
@@ -504,8 +517,39 @@
                                         Maximum="80"
                                         Value="28"
                                         ValueChanged="EraserSettings_Changed"/>
+                            </StackPanel>
+                        </Border>
 
-                                <TextBlock Text="Выберите режим «Ластик» и проведите по части линии, которую нужно стереть."
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <TextBlock Text="Коррекция кривой"
+                                           Style="{StaticResource SectionTitle}"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Количество точек"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding ElementName=CurvePointDensitySlider, Path=Value, StringFormat={}{0:0}}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
+
+                                <Slider x:Name="CurvePointDensitySlider"
+                                        Style="{StaticResource PrettySlider}"
+                                        Minimum="6"
+                                        Maximum="36"
+                                        Value="18"
+                                        TickFrequency="1"
+                                        ValueChanged="CurvePointDensity_Changed"/>
+
+                                <TextBlock Text="Чем больше точек, тем точнее можно менять форму линии."
                                            Margin="0,8,0,0"
                                            TextWrapping="Wrap"
                                            FontSize="12"
@@ -559,7 +603,7 @@
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextBrush}"/>
 
-                        <TextBlock Text="Выберите тип кисти: обычную или каллиграфическую."
+                        <TextBlock Text="Рисуйте, стирайте или корректируйте форму линии через опорные точки."
                                    Margin="0,4,0,0"
                                    FontSize="12"
                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -632,6 +676,13 @@
                                    StrokeErasing="Ink_StrokeErasing"
                                    PreviewMouseDown="Ink_PreviewMouseDown_ForceMode"
                                    PreviewStylusDown="Ink_PreviewStylusDown_ForceMode"/>
+
+                        <Canvas x:Name="CurveEditCanvas"
+                                Background="Transparent"
+                                Visibility="Collapsed"
+                                MouseLeftButtonDown="CurveEditCanvas_MouseLeftButtonDown"
+                                MouseMove="CurveEditCanvas_MouseMove"
+                                MouseLeftButtonUp="CurveEditCanvas_MouseLeftButtonUp"/>
                     </Grid>
                 </Border>
             </Grid>
