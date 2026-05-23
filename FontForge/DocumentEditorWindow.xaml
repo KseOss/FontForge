@@ -4,16 +4,23 @@
         Title="Редактор текста"
         Height="800"
         Width="1240"
+        MinHeight="800"
+        MinWidth="1240"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanMinimize"
         Background="{DynamicResource BackgroundBrush}"
         Icon="/Images/Logo.png"
-        Loaded="Window_Loaded">
+        Loaded="Window_Loaded"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
 
     <Window.Resources>
 
-        <!-- Фон листа в клетку.
-             Это только предпросмотр, в PDF сетка не сохраняется. -->
+        <!-- Мягкий бумажный фон предпросмотра -->
+        <SolidColorBrush x:Key="PaperBrush" Color="#F3F4EF"/>
+        <SolidColorBrush x:Key="PaperBorderBrush" Color="#C9D0C7"/>
+
+        <!-- Фон листа в клетку. Это только предпросмотр, в PDF сетка не сохраняется. -->
         <DrawingBrush x:Key="PaperGridBrush"
                       TileMode="Tile"
                       Viewport="0,0,96,96"
@@ -23,8 +30,8 @@
             <DrawingBrush.Drawing>
                 <DrawingGroup>
 
-                    <!-- Белый фон листа -->
-                    <GeometryDrawing Brush="#FFFFFF">
+                    <!-- Мягкий бумажный фон -->
+                    <GeometryDrawing Brush="#F3F4EF">
                         <GeometryDrawing.Geometry>
                             <RectangleGeometry Rect="0,0,96,96"/>
                         </GeometryDrawing.Geometry>
@@ -33,7 +40,7 @@
                     <!-- Маленькие клетки -->
                     <GeometryDrawing>
                         <GeometryDrawing.Pen>
-                            <Pen Brush="#E8EDF5" Thickness="0.8"/>
+                            <Pen Brush="#DDE4DC" Thickness="0.75"/>
                         </GeometryDrawing.Pen>
 
                         <GeometryDrawing.Geometry>
@@ -49,10 +56,10 @@
                         </GeometryDrawing.Geometry>
                     </GeometryDrawing>
 
-                    <!-- Более заметные большие клетки -->
+                    <!-- Большие клетки -->
                     <GeometryDrawing>
                         <GeometryDrawing.Pen>
-                            <Pen Brush="#D7E0EF" Thickness="1.1"/>
+                            <Pen Brush="#C8D3C8" Thickness="1.05"/>
                         </GeometryDrawing.Pen>
 
                         <GeometryDrawing.Geometry>
@@ -70,188 +77,521 @@
             </DrawingBrush.Drawing>
         </DrawingBrush>
 
+
+        <!-- Скроллбар под стиль проекта -->
+        <Style x:Key="ThemeScrollBarThumb" TargetType="Thumb">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Opacity" Value="0.55"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="ThumbBorder"
+                                CornerRadius="6"
+                                Background="{TemplateBinding Background}"
+                                Opacity="{TemplateBinding Opacity}"/>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ThumbBorder" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ThemeScrollBar" TargetType="ScrollBar">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Border CornerRadius="8"
+                                Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track"
+                                   IsDirectionReversed="True"
+                                   Margin="3">
+
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand"
+                                                  Opacity="0"
+                                                  IsTabStop="False"/>
+                                </Track.DecreaseRepeatButton>
+
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource ThemeScrollBarThumb}"/>
+                                </Track.Thumb>
+
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand"
+                                                  Opacity="0"
+                                                  IsTabStop="False"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
+        <!-- Левая большая карточка -->
+        <Style x:Key="EditorSideCard" TargetType="Border">
+            <Setter Property="CornerRadius" Value="24"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Небольшие блоки настроек -->
+        <Style x:Key="SettingsBlock" TargetType="Border">
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <Style x:Key="SettingsTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+
+        <Style x:Key="SettingsHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <!-- Поле ввода текста -->
+        <Style x:Key="DocumentTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="AcceptsReturn" Value="True"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Root"
+                                CornerRadius="14"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}"
+                                          HorizontalScrollBarVisibility="Disabled"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                            </Trigger>
+
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Кнопки -->
+        <Style x:Key="DocumentPrimaryButton" TargetType="Button" BasedOn="{StaticResource AppPrimaryButton}">
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="20,0"/>
+        </Style>
+
+        <Style x:Key="DocumentSecondaryButton" TargetType="Button" BasedOn="{StaticResource AppSecondaryButton}">
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="18,0"/>
+        </Style>
+
     </Window.Resources>
+
 
     <Grid Margin="24">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="390"/>
+            <ColumnDefinition Width="400"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
+
         <!-- Левая панель -->
-        <Border Style="{StaticResource AppCard}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
+        <Border Grid.Column="0"
+                Style="{StaticResource EditorSideCard}">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок -->
+                <StackPanel Grid.Row="0">
                     <TextBlock Text="Редактор текста"
-                               Style="{StaticResource AppTitleText}"/>
+                               FontSize="26"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextBrush}"/>
 
-                    <TextBlock Margin="0,12,0,6"
-                               Text="Шрифт"
-                               Style="{StaticResource AppLabelText}"/>
+                    <TextBlock Text="Настройте текст, интервалы и сохраните результат в PDF."
+                               Margin="0,6,0,0"
+                               FontSize="13"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
 
-                    <ComboBox x:Name="FontsCombo"
-                              Style="{StaticResource AppComboBox}"
-                              SelectionChanged="FontsCombo_SelectionChanged"/>
 
-                    <TextBlock Margin="0,14,0,6"
-                               Text="Текст"
-                               Style="{StaticResource AppLabelText}"/>
+                <!-- Настройки -->
+                <ScrollViewer Grid.Row="1"
+                              Margin="0,18,0,0"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="0,0,6,0">
 
-                    <TextBox x:Name="InputBox"
-                             Style="{StaticResource AppTextBox}"
-                             Height="150"
-                             TextWrapping="Wrap"
-                             AcceptsReturn="True"
-                             VerticalScrollBarVisibility="Auto"
-                             TextChanged="InputBox_TextChanged"
-                             Text="Введите свой текст и сохраните в PDF."/>
+                    <ScrollViewer.Resources>
+                        <Style TargetType="ScrollBar" BasedOn="{StaticResource ThemeScrollBar}"/>
+                    </ScrollViewer.Resources>
 
-                    <TextBlock Margin="0,14,0,0"
-                               Text="Размер текста"
-                               Style="{StaticResource AppLabelText}"/>
+                    <StackPanel>
 
-                    <TextBlock x:Name="PreviewSizeValueText"
-                               Margin="0,2,0,0"
-                               Style="{StaticResource AppLabelText}"/>
+                        <!-- Шрифт -->
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <TextBlock Text="Шрифт"
+                                           Style="{StaticResource SettingsTitle}"/>
 
-                    <Slider x:Name="PreviewSizeSlider"
-                            Style="{StaticResource AppSlider}"
-                            Minimum="18"
-                            Maximum="140"
-                            Value="64"
-                            ValueChanged="TypographySettings_Changed"/>
+                                <TextBlock Text="Выберите созданный пользователем шрифт."
+                                           Style="{StaticResource SettingsHint}"
+                                           Margin="0,4,0,8"/>
 
-                    <TextBlock Margin="0,12,0,0"
-                               Text="Межбуквенный интервал"
-                               Style="{StaticResource AppLabelText}"/>
+                                <ComboBox x:Name="FontsCombo"
+                                          Style="{StaticResource AppComboBox}"
+                                          SelectionChanged="FontsCombo_SelectionChanged"/>
+                            </StackPanel>
+                        </Border>
 
-                    <TextBlock x:Name="LetterSpacingValueText"
-                               Margin="0,2,0,0"
-                               Style="{StaticResource AppLabelText}"/>
 
-                    <Slider x:Name="LetterSpacingSlider"
-                            Style="{StaticResource AppSlider}"
-                            Minimum="-20"
-                            Maximum="35"
-                            Value="0"
-                            TickFrequency="1"
-                            ValueChanged="TypographySettings_Changed"/>
+                        <!-- Текст -->
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <TextBlock Text="Текст"
+                                           Style="{StaticResource SettingsTitle}"/>
 
-                    <TextBlock Margin="0,12,0,0"
-                               Text="Расстояние между словами"
-                               Style="{StaticResource AppLabelText}"/>
+                                <TextBlock Text="Введите текст для предпросмотра и сохранения в PDF."
+                                           Style="{StaticResource SettingsHint}"
+                                           Margin="0,4,0,8"/>
 
-                    <TextBlock x:Name="WordSpacingValueText"
-                               Margin="0,2,0,0"
-                               Style="{StaticResource AppLabelText}"/>
+                                <TextBox x:Name="InputBox"
+                                         Style="{StaticResource DocumentTextBox}"
+                                         Height="150"
+                                         TextChanged="InputBox_TextChanged"
+                                         Text="Введите свой текст и сохраните в PDF."/>
+                            </StackPanel>
+                        </Border>
 
-                    <Slider x:Name="WordSpacingSlider"
-                            Style="{StaticResource AppSlider}"
-                            Minimum="10"
-                            Maximum="120"
-                            Value="32"
-                            ValueChanged="TypographySettings_Changed"/>
 
-                    <TextBlock Margin="0,12,0,0"
-                               Text="Межстрочный интервал"
-                               Style="{StaticResource AppLabelText}"/>
+                        <!-- Размер -->
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                    <TextBlock x:Name="LineSpacingValueText"
-                               Margin="0,2,0,0"
-                               Style="{StaticResource AppLabelText}"/>
+                                    <TextBlock Text="Размер текста"
+                                               Style="{StaticResource SettingsTitle}"/>
 
-                    <Slider x:Name="LineSpacingSlider"
-                            Style="{StaticResource AppSlider}"
-                            Minimum="0.8"
-                            Maximum="3.0"
-                            Value="1.2"
-                            TickFrequency="0.1"
-                            ValueChanged="TypographySettings_Changed"/>
+                                    <TextBlock x:Name="PreviewSizeValueText"
+                                               Grid.Column="1"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
 
-                    <TextBlock Margin="0,12,0,0"
-                               Text="Отступ слева"
-                               Style="{StaticResource AppLabelText}"/>
+                                <Slider x:Name="PreviewSizeSlider"
+                                        Style="{StaticResource AppSlider}"
+                                        Minimum="18"
+                                        Maximum="140"
+                                        Value="64"
+                                        ValueChanged="TypographySettings_Changed"/>
+                            </StackPanel>
+                        </Border>
 
-                    <TextBlock x:Name="LeftIndentValueText"
-                               Margin="0,2,0,0"
-                               Style="{StaticResource AppLabelText}"/>
 
-                    <Slider x:Name="LeftIndentSlider"
-                            Style="{StaticResource AppSlider}"
-                            Minimum="0"
-                            Maximum="180"
-                            Value="0"
-                            ValueChanged="TypographySettings_Changed"/>
+                        <!-- Соединение букв -->
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                    <TextBlock Margin="0,12,0,0"
-                               Text="Отступ первой строки каждого абзаца"
-                               Style="{StaticResource AppLabelText}"/>
+                                    <TextBlock Text="Соединение букв"
+                                               Style="{StaticResource SettingsTitle}"/>
 
-                    <TextBlock x:Name="FirstLineIndentValueText"
-                               Margin="0,2,0,0"
-                               Style="{StaticResource AppLabelText}"/>
+                                    <TextBlock x:Name="LetterSpacingValueText"
+                                               Grid.Column="1"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
 
-                    <Slider x:Name="FirstLineIndentSlider"
-                            Style="{StaticResource AppSlider}"
-                            Minimum="0"
-                            Maximum="180"
-                            Value="0"
-                            ValueChanged="TypographySettings_Changed"/>
+                                <TextBlock Text="Для рукописного соединения двигайте ползунок в минус."
+                                           Style="{StaticResource SettingsHint}"
+                                           Margin="0,4,0,0"/>
 
-                    <Button Margin="0,18,0,0"
-                            Style="{StaticResource AppPrimaryButton}"
-                            Content="Сохранить в PDF"
+                                <Slider x:Name="LetterSpacingSlider"
+                                        Style="{StaticResource AppSlider}"
+                                        Minimum="-70"
+                                        Maximum="35"
+                                        Value="0"
+                                        TickFrequency="1"
+                                        ValueChanged="TypographySettings_Changed"/>
+                            </StackPanel>
+                        </Border>
+
+
+                        <!-- Расстояние между словами -->
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Расстояние между словами"
+                                               Style="{StaticResource SettingsTitle}"/>
+
+                                    <TextBlock x:Name="WordSpacingValueText"
+                                               Grid.Column="1"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
+
+                                <Slider x:Name="WordSpacingSlider"
+                                        Style="{StaticResource AppSlider}"
+                                        Minimum="10"
+                                        Maximum="120"
+                                        Value="32"
+                                        ValueChanged="TypographySettings_Changed"/>
+                            </StackPanel>
+                        </Border>
+
+
+                        <!-- Межстрочный интервал -->
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Межстрочный интервал"
+                                               Style="{StaticResource SettingsTitle}"/>
+
+                                    <TextBlock x:Name="LineSpacingValueText"
+                                               Grid.Column="1"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
+
+                                <Slider x:Name="LineSpacingSlider"
+                                        Style="{StaticResource AppSlider}"
+                                        Minimum="0.8"
+                                        Maximum="3.0"
+                                        Value="1.2"
+                                        TickFrequency="0.1"
+                                        ValueChanged="TypographySettings_Changed"/>
+                            </StackPanel>
+                        </Border>
+
+
+                        <!-- Отступ слева -->
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Отступ слева"
+                                               Style="{StaticResource SettingsTitle}"/>
+
+                                    <TextBlock x:Name="LeftIndentValueText"
+                                               Grid.Column="1"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
+
+                                <Slider x:Name="LeftIndentSlider"
+                                        Style="{StaticResource AppSlider}"
+                                        Minimum="0"
+                                        Maximum="180"
+                                        Value="0"
+                                        ValueChanged="TypographySettings_Changed"/>
+                            </StackPanel>
+                        </Border>
+
+
+                        <!-- Отступ первой строки -->
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Отступ первой строки"
+                                               Style="{StaticResource SettingsTitle}"/>
+
+                                    <TextBlock x:Name="FirstLineIndentValueText"
+                                               Grid.Column="1"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
+
+                                <TextBlock Text="Применяется к каждому новому абзацу после Enter."
+                                           Style="{StaticResource SettingsHint}"
+                                           Margin="0,4,0,0"/>
+
+                                <Slider x:Name="FirstLineIndentSlider"
+                                        Style="{StaticResource AppSlider}"
+                                        Minimum="0"
+                                        Maximum="180"
+                                        Value="0"
+                                        ValueChanged="TypographySettings_Changed"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+
+
+                <!-- Нижние кнопки -->
+                <StackPanel Grid.Row="2"
+                            Margin="0,18,0,0">
+
+                    <Button Content="Сохранить в PDF"
+                            Style="{StaticResource DocumentPrimaryButton}"
                             Click="SavePdf_Click"/>
 
-                    <Button Margin="0,10,0,0"
-                            Style="{StaticResource AppSecondaryButton}"
-                            Content="Закрыть"
+                    <Button Content="Закрыть"
+                            Margin="0,10,0,0"
+                            Style="{StaticResource DocumentSecondaryButton}"
                             Click="Close_Click"/>
                 </StackPanel>
-            </ScrollViewer>
-        </Border>
-
-        <!-- Правая область предпросмотра -->
-        <Border Grid.Column="1"
-                Margin="18,0,0,0"
-                CornerRadius="18"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="1">
-
-            <Grid Margin="16">
-
-                <!-- Лист с клетками -->
-                <Border CornerRadius="14"
-                        Background="{StaticResource PaperGridBrush}"
-                        BorderBrush="#D6DAE2"
-                        BorderThickness="1">
-
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  Background="Transparent">
-
-                        <StackPanel x:Name="PreviewRoot"
-                                    Margin="24"/>
-                    </ScrollViewer>
-                </Border>
-
-                <!-- Маленькая подпись -->
-                <Border HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="0,10,10,0"
-                        Padding="10,5"
-                        CornerRadius="12"
-                        Background="#CCFFFFFF"
-                        BorderBrush="#D6DAE2"
-                        BorderThickness="1">
-
-                    <TextBlock Text="Предпросмотр страницы"
-                               FontSize="12"
-                               Foreground="#667085"/>
-                </Border>
 
             </Grid>
         </Border>
+
+
+        <!-- Правая область предпросмотра -->
+        <Border Grid.Column="1"
+                Margin="20,0,0,0"
+                CornerRadius="26"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource MutedBorderBrush}"
+                BorderThickness="1"
+                Padding="16">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок предпросмотра -->
+                <Grid Grid.Row="0"
+                      Margin="4,0,4,14">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Предпросмотр страницы"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextBrush}"/>
+
+                        <TextBlock Text="Сетка нужна только для ориентира и не попадёт в PDF."
+                                   Margin="0,4,0,0"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+
+                    <Border Grid.Column="1"
+                            CornerRadius="14"
+                            Background="{DynamicResource SurfaceAltBrush}"
+                            BorderBrush="{DynamicResource MutedBorderBrush}"
+                            BorderThickness="1"
+                            Padding="12,7"
+                            VerticalAlignment="Top">
+
+                        <TextBlock Text="A4"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </Border>
+                </Grid>
+
+
+                <!-- Лист -->
+                <Border Grid.Row="1"
+                        CornerRadius="22"
+                        Background="{StaticResource PaperGridBrush}"
+                        BorderBrush="{StaticResource PaperBorderBrush}"
+                        BorderThickness="1"
+                        ClipToBounds="True">
+
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="18"
+                                          ShadowDepth="0"
+                                          Opacity="0.10"
+                                          Color="#000000"/>
+                    </Border.Effect>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Background="Transparent"
+                                  Padding="0">
+
+                        <ScrollViewer.Resources>
+                            <Style TargetType="ScrollBar" BasedOn="{StaticResource ThemeScrollBar}"/>
+                        </ScrollViewer.Resources>
+
+                        <StackPanel x:Name="PreviewRoot"
+                                    Margin="28"/>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+
     </Grid>
 </Window>

@@ -2,82 +2,63 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Новый шрифт"
-        Height="240" Width="460"
+        Height="412"
+        Width="500"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}"
-        Icon="/Images/Logo.png">
+        Icon="/Images/Logo.png"
+        Loaded="Window_Loaded"
+        KeyDown="Window_KeyDown">
 
     <Window.Resources>
 
-        <!-- ToggleSwitch темы (🌙/🔆) -->
-        <Style x:Key="ThemeToggleSwitchStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="70"/>
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Focusable" Value="False"/>
+        <Style x:Key="DialogCard" TargetType="Border">
+            <Setter Property="CornerRadius" Value="22"/>
+            <Setter Property="Padding" Value="22"/>
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style x:Key="DialogTextBox" TargetType="TextBox">
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
-                            <Border x:Name="Track"
-                                    CornerRadius="17"
-                                    Background="#D6D6D6"
-                                    BorderBrush="#B8B8B8"
-                                    BorderThickness="1"/>
-                            <Border x:Name="Thumb"
-                                    Width="30" Height="30"
-                                    CornerRadius="15"
-                                    Background="White"
-                                    HorizontalAlignment="Left"
-                                    Margin="2">
-                                <Border.RenderTransform>
-                                    <TranslateTransform x:Name="ThumbTransform" X="0"/>
-                                </Border.RenderTransform>
-                                <TextBlock x:Name="IconText"
-                                           Text="🌙"
-                                           FontSize="16"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"/>
-                            </Border>
-                        </Grid>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Root"
+                                CornerRadius="12"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center"/>
+                        </Border>
 
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter TargetName="IconText" Property="Text" Value="🔆"/>
-
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
-                                                             Storyboard.TargetProperty="X"
-                                                             To="36"
-                                                             Duration="0:0:0.18"
-                                                             AccelerationRatio="0.2"
-                                                             DecelerationRatio="0.8"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
-                                                             Storyboard.TargetProperty="X"
-                                                             To="0"
-                                                             Duration="0:0:0.18"
-                                                             AccelerationRatio="0.2"
-                                                             DecelerationRatio="0.8"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                             </Trigger>
 
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Thumb" Property="Background" Value="#F3F3F3"/>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="Root" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.55"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -85,73 +66,90 @@
             </Setter>
         </Style>
 
+        <Style x:Key="DialogPrimaryButton" TargetType="Button" BasedOn="{StaticResource AppPrimaryButton}">
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="MinWidth" Value="130"/>
+            <Setter Property="Padding" Value="22,0"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <Style x:Key="DialogSecondaryButton" TargetType="Button" BasedOn="{StaticResource AppSecondaryButton}">
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="MinWidth" Value="130"/>
+            <Setter Property="Padding" Value="22,0"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
     </Window.Resources>
 
-    <Grid Margin="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Grid Margin="24">
 
-        <!-- Заголовок и переключатель темы -->
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <Border Style="{StaticResource DialogCard}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <TextBlock Text="Создать новый шрифт"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextBrush}"
-                       VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="0">
+                    <TextBlock x:Name="HeaderText"
+                               Text="Создать новый шрифт"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextBrush}"/>
 
-            <!-- ВАЖНО: IsChecked = !IsDarkTheme (как у тебя в FontsWindow) -->
-            
-        </Grid>
+                    <TextBlock x:Name="DescriptionText"
+                               Text="Введите название, которое будет отображаться в списке ваших шрифтов."
+                               Margin="0,8,0,0"
+                               FontSize="13"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
 
-        <TextBlock Grid.Row="1"
-                   Margin="0,14,0,6"
-                   Text="Название шрифта"
-                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBlock Grid.Row="1"
+                           Margin="0,22,0,8"
+                           Text="Название шрифта"
+                           FontSize="13"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-        <TextBox x:Name="NameBox"
-                 Grid.Row="2"
-                 Height="36"
-                 FontSize="14"
-                 VerticalContentAlignment="Center"
-                 Background="#0D000000"
-                 Foreground="{DynamicResource TextBrush}"
-                 BorderThickness="0"
-                 Padding="10,0"/>
+                <TextBox x:Name="NameBox"
+                         Grid.Row="2"
+                         Style="{StaticResource DialogTextBox}"
+                         MaxLength="40"/>
 
-        <StackPanel Grid.Row="4"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,14,0,0">
-            <Button Content="Отмена"
-                    Width="110"
-                    Height="36"
-                    Margin="0,0,10,0"
-                    Click="Cancel_Click"/>
+                <TextBlock Grid.Row="3"
+                           x:Name="HintText"
+                           Text="Например: Мой почерк, Шрифтик"
+                           Margin="0,8,0,0"
+                           FontSize="12"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           Opacity="0.85"/>
 
-            <Button Content="Создать"
-                    Width="110"
-                    Height="36"
-                    Background="{DynamicResource ButtonBackgroundBrush}"
-                    Foreground="{DynamicResource ButtonTextBrush}"
-                    BorderThickness="0"
-                    Click="Ok_Click"/>
-        </StackPanel>
+                <Grid Grid.Row="4"
+                      Margin="0,24,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-        <!-- Overlay для плавной смены темы -->
-        <Rectangle x:Name="FadeOverlay"
-                   Panel.ZIndex="999"
-                   Fill="{DynamicResource BackgroundBrush}"
-                   Opacity="0"
-                   IsHitTestVisible="False"/>
+                    <Button Grid.Column="1"
+                            Content="Отмена"
+                            Style="{StaticResource DialogSecondaryButton}"
+                            Margin="0,0,10,0"
+                            Click="Cancel_Click"/>
+
+                    <Button x:Name="OkButton"
+                            Grid.Column="2"
+                            Content="Создать"
+                            Style="{StaticResource DialogPrimaryButton}"
+                            Click="Ok_Click"/>
+                </Grid>
+            </Grid>
+        </Border>
+
     </Grid>
 </Window>

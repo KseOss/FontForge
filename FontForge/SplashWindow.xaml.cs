@@ -289,8 +289,14 @@ namespace FontForge
 
             fade.Completed += (_, __) =>
             {
-                var main = new MainWindow();
-                main.Show();
+                Window nextWindow;
+
+                if (App.CurrentThemeSettings.StartWindow == "FontsWindow")
+                    nextWindow = new FontsWindow();
+                else
+                    nextWindow = new MainWindow();
+
+                nextWindow.Show();
 
                 Close();
             };

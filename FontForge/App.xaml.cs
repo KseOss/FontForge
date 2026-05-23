@@ -293,6 +293,17 @@ namespace FontForge
 
         public string ButtonStyle { get; set; } = "Auto";
 
+        // Что открывать после загрузки приложения:
+        // MainWindow или FontsWindow
+        public string StartWindow { get; set; } = "MainWindow";
+
+        // Что делать после создания нового шрифта:
+        // OpenEditor или StayInList
+        public string AfterCreateFont { get; set; } = "OpenEditor";
+
+        // Подтверждать перемещение в корзину
+        public bool ConfirmMoveToTrash { get; set; } = true;
+
         public AppThemeSettings Clone()
         {
             return new AppThemeSettings
@@ -300,7 +311,10 @@ namespace FontForge
                 ThemeMode = ThemeMode,
                 AccentName = AccentName,
                 BackgroundStyle = BackgroundStyle,
-                ButtonStyle = ButtonStyle
+                ButtonStyle = ButtonStyle,
+                StartWindow = StartWindow,
+                AfterCreateFont = AfterCreateFont,
+                ConfirmMoveToTrash = ConfirmMoveToTrash
             };
         }
 
@@ -331,6 +345,18 @@ namespace FontForge
                 ButtonStyle != "Accent")
             {
                 ButtonStyle = "Auto";
+            }
+
+            if (StartWindow != "MainWindow" &&
+                StartWindow != "FontsWindow")
+            {
+                StartWindow = "MainWindow";
+            }
+
+            if (AfterCreateFont != "OpenEditor" &&
+                AfterCreateFont != "StayInList")
+            {
+                AfterCreateFont = "OpenEditor";
             }
         }
     }

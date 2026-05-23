@@ -395,7 +395,7 @@
                 <Border Grid.Row="3"
                         Margin="0,14,0,0"
                         CornerRadius="14"
-                        Background="{DynamicResource PreviewBackgroundBrush}"
+                        Background="#F3F4EF"
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
                         Padding="12">
@@ -462,7 +462,7 @@
                                         <Border Grid.Row="1"
                                                 Margin="0,8,0,0"
                                                 CornerRadius="10"
-                                                Background="White"
+                                                Background="#F3F4EF"
                                                 BorderBrush="#1A000000"
                                                 BorderThickness="1">
                                             <Image Source="{Binding DefaultImagePath}"

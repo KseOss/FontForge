@@ -28,6 +28,10 @@ namespace FontForge
             SelectComboByTag(AccentCombo, settings.AccentName);
             SelectComboByTag(BackgroundCombo, settings.BackgroundStyle);
             SelectComboByTag(ButtonStyleCombo, settings.ButtonStyle);
+
+            SelectComboByTag(StartWindowCombo, settings.StartWindow);
+            SelectComboByTag(AfterCreateFontCombo, settings.AfterCreateFont);
+            SelectComboByTag(ConfirmMoveToTrashCombo, settings.ConfirmMoveToTrash ? "True" : "False");
         }
 
         private void Settings_Changed(object sender, SelectionChangedEventArgs e)
@@ -45,7 +49,11 @@ namespace FontForge
                 ThemeMode = GetSelectedTag(ThemeModeCombo, "Light"),
                 AccentName = GetSelectedTag(AccentCombo, "Neutral"),
                 BackgroundStyle = GetSelectedTag(BackgroundCombo, "Plain"),
-                ButtonStyle = GetSelectedTag(ButtonStyleCombo, "Auto")
+                ButtonStyle = GetSelectedTag(ButtonStyleCombo, "Auto"),
+
+                StartWindow = GetSelectedTag(StartWindowCombo, "MainWindow"),
+                AfterCreateFont = GetSelectedTag(AfterCreateFontCombo, "OpenEditor"),
+                ConfirmMoveToTrash = GetSelectedTag(ConfirmMoveToTrashCombo, "True") == "True"
             };
 
             settings.Normalize();
@@ -63,6 +71,10 @@ namespace FontForge
             SelectComboByTag(AccentCombo, settings.AccentName);
             SelectComboByTag(BackgroundCombo, settings.BackgroundStyle);
             SelectComboByTag(ButtonStyleCombo, settings.ButtonStyle);
+
+            SelectComboByTag(StartWindowCombo, settings.StartWindow);
+            SelectComboByTag(AfterCreateFontCombo, settings.AfterCreateFont);
+            SelectComboByTag(ConfirmMoveToTrashCombo, settings.ConfirmMoveToTrash ? "True" : "False");
 
             _isLoading = false;
 

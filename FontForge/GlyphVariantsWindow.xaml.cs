@@ -180,8 +180,8 @@ namespace FontForge
             var imageBorder = new Border
             {
                 CornerRadius = new CornerRadius(14),
-                Background = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromArgb(0x22, 0, 0, 0)),
+                Background = new SolidColorBrush(Color.FromRgb(243, 244, 239)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(201, 208, 199)),
                 BorderThickness = new Thickness(1),
                 Margin = new Thickness(0, 12, 0, 0)
             };

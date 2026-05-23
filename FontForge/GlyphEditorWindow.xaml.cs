@@ -37,9 +37,6 @@ namespace FontForge
             GuideLetterText.Text = _ch;
         }
 
-        // =========================
-        // INIT
-        // =========================
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             _uiReady = true;
@@ -55,19 +52,17 @@ namespace FontForge
 
             PushUndoSnapshot();
 
-            // подправим заливку красивого слайдера (его Fill)
             UpdatePrettySliderFill();
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (!_uiReady) return;
+            if (!_uiReady)
+                return;
+
             DrawGuides();
         }
 
-        // =========================
-        // LOAD existing (ISF)
-        // =========================
         private void LoadExistingStrokesIfAny()
         {
             try
@@ -83,33 +78,33 @@ namespace FontForge
             }
             catch
             {
-                // не падаем — просто откроется пусто
+                // Если ISF не прочитался, открываем пустой холст.
             }
         }
 
-        // =========================
-        // FORCE MODE on input
-        // =========================
         private void Ink_PreviewMouseDown_ForceMode(object sender, MouseButtonEventArgs e)
         {
-            if (!_uiReady) return;
+            if (!_uiReady)
+                return;
+
             if (ModeDrawRadio.IsChecked == true)
                 ApplyMode();
         }
 
         private void Ink_PreviewStylusDown_ForceMode(object sender, StylusDownEventArgs e)
         {
-            if (!_uiReady) return;
+            if (!_uiReady)
+                return;
+
             if (ModeDrawRadio.IsChecked == true)
                 ApplyMode();
         }
 
-        // =========================
-        // MODE
-        // =========================
         private void ModeRadio_Checked(object sender, RoutedEventArgs e)
         {
-            if (!_uiReady) return;
+            if (!_uiReady)
+                return;
+
             ApplyMode();
         }
 
@@ -134,13 +129,20 @@ namespace FontForge
             }
         }
 
-        // =========================
-        // GUIDE VISIBILITY
-        // =========================
         private void ShowGuideCheck_Changed(object sender, RoutedEventArgs e)
         {
-            if (!_uiReady) return;
+            if (!_uiReady)
+                return;
+
             ApplyGuideVisibility();
+        }
+
+        private void ShowConnectGuidesCheck_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_uiReady)
+                return;
+
+            DrawGuides();
         }
 
         private void ApplyGuideVisibility()
@@ -150,9 +152,6 @@ namespace FontForge
                 : Visibility.Collapsed;
         }
 
-        // =========================
-        // GUIDES
-        // =========================
         private void DrawGuides()
         {
             GuideLinesCanvas.Children.Clear();
@@ -160,20 +159,34 @@ namespace FontForge
             double w = Math.Max(1, WorkGrid.ActualWidth);
             double h = Math.Max(1, WorkGrid.ActualHeight);
 
+            DrawConnectionZones(w, h);
+            DrawMainGuides(w, h);
+        }
+
+        private void DrawMainGuides(double w, double h)
+        {
             var border = new Rectangle
             {
                 Width = Math.Max(1, w - 2),
                 Height = Math.Max(1, h - 2),
-                Stroke = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)),
+                Stroke = new SolidColorBrush(Color.FromArgb(115, 60, 64, 60)),
                 StrokeThickness = 1,
                 StrokeDashArray = new DoubleCollection { 3, 3 },
                 Fill = Brushes.Transparent
             };
+
             Canvas.SetLeft(border, 1);
             Canvas.SetTop(border, 1);
             GuideLinesCanvas.Children.Add(border);
 
-            double[] ys = { h * 0.18, h * 0.38, h * 0.62, h * 0.82 };
+            double[] ys =
+            {
+                h * 0.18,
+                h * 0.38,
+                h * 0.62,
+                h * 0.82
+            };
+
             foreach (double y in ys)
             {
                 var line = new Line
@@ -182,20 +195,116 @@ namespace FontForge
                     X2 = w,
                     Y1 = y,
                     Y2 = y,
-                    Stroke = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0)),
+                    Stroke = new SolidColorBrush(Color.FromArgb(105, 70, 76, 70)),
                     StrokeThickness = 1,
-                    StrokeDashArray = new DoubleCollection { 2, 4 }
+                    StrokeDashArray = new DoubleCollection { 2, 5 }
                 };
+
                 GuideLinesCanvas.Children.Add(line);
             }
         }
 
-        // =========================
-        // BRUSH (only size)
-        // =========================
+        private void DrawConnectionZones(double w, double h)
+        {
+            if (ShowConnectGuidesCheck == null || ShowConnectGuidesCheck.IsChecked != true)
+                return;
+
+            Color accent = GetAccentColor();
+
+            double leftX = w * 0.18;
+            double rightX = w * 0.82;
+
+            var zoneBrush = new SolidColorBrush(Color.FromArgb(16, accent.R, accent.G, accent.B));
+            var lineBrush = new SolidColorBrush(Color.FromArgb(175, accent.R, accent.G, accent.B));
+
+            var leftZone = new Rectangle
+            {
+                Width = leftX,
+                Height = h,
+                Fill = zoneBrush
+            };
+
+            Canvas.SetLeft(leftZone, 0);
+            Canvas.SetTop(leftZone, 0);
+            GuideLinesCanvas.Children.Add(leftZone);
+
+            var rightZone = new Rectangle
+            {
+                Width = w - rightX,
+                Height = h,
+                Fill = zoneBrush
+            };
+
+            Canvas.SetLeft(rightZone, rightX);
+            Canvas.SetTop(rightZone, 0);
+            GuideLinesCanvas.Children.Add(rightZone);
+
+            AddVerticalConnectionLine(leftX, h, lineBrush);
+            AddVerticalConnectionLine(rightX, h, lineBrush);
+
+            AddConnectionLabel("вход соединения", leftX + 8, 14, lineBrush);
+            AddConnectionLabel("выход соединения", Math.Max(8, rightX - 128), 14, lineBrush);
+        }
+
+        private void AddVerticalConnectionLine(double x, double h, Brush stroke)
+        {
+            var line = new Line
+            {
+                X1 = x,
+                X2 = x,
+                Y1 = 0,
+                Y2 = h,
+                Stroke = stroke,
+                StrokeThickness = 2,
+                StrokeDashArray = new DoubleCollection { 7, 6 }
+            };
+
+            GuideLinesCanvas.Children.Add(line);
+        }
+
+        private void AddConnectionLabel(string text, double x, double y, Brush foreground)
+        {
+            var label = new Border
+            {
+                CornerRadius = new CornerRadius(10),
+                Background = new SolidColorBrush(Color.FromArgb(215, 243, 244, 239)),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(70, 80, 86, 80)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8, 4, 8, 4),
+                Child = new TextBlock
+                {
+                    Text = text,
+                    FontSize = 12,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = foreground
+                }
+            };
+
+            Canvas.SetLeft(label, x);
+            Canvas.SetTop(label, y);
+            GuideLinesCanvas.Children.Add(label);
+        }
+
+        private Color GetAccentColor()
+        {
+            try
+            {
+                if (Application.Current.Resources["AccentBrush"] is SolidColorBrush brush)
+                    return brush.Color;
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return Color.FromRgb(90, 90, 90);
+        }
+
         private void BrushSettings_Changed(object sender, RoutedEventArgs e)
         {
-            if (!_uiReady) return;
+            if (!_uiReady)
+                return;
+
             ApplyBrush();
             UpdatePrettySliderFill();
         }
@@ -214,29 +323,24 @@ namespace FontForge
             };
         }
 
-        // попытка красиво подкрашивать Fill-трек внутри шаблона
         private void UpdatePrettySliderFill()
         {
-            // Шаблонный Border TrackFill мы не ищем через визуальное дерево (дорого),
-            // но можно обновлять ширину через ValueChanged только если шаблон применён.
-            if (BrushSizeSlider.Template == null) return;
+            if (BrushSizeSlider.Template == null)
+                return;
 
             var track = BrushSizeSlider.Template.FindName("PART_Track", BrushSizeSlider) as Track;
             var fill = BrushSizeSlider.Template.FindName("TrackFill", BrushSizeSlider) as Border;
 
-            if (track == null || fill == null) return;
+            if (track == null || fill == null)
+                return;
 
             double range = Math.Max(1, BrushSizeSlider.Maximum - BrushSizeSlider.Minimum);
             double k = (BrushSizeSlider.Value - BrushSizeSlider.Minimum) / range;
 
-            // ширина заполнения = ширина трека * k
             double trackWidth = Math.Max(0, track.ActualWidth);
             fill.Width = trackWidth * k;
         }
 
-        // =========================
-        // UNDO
-        // =========================
         private void Ink_StrokeCollected(object sender, InkCanvasStrokeCollectedEventArgs e)
         {
             PushUndoSnapshot();
@@ -249,14 +353,18 @@ namespace FontForge
             if (_undo.Count > 60)
             {
                 var arr = _undo.Reverse().Take(60).Reverse().ToArray();
+
                 _undo.Clear();
-                foreach (var s in arr) _undo.Push(s);
+
+                foreach (StrokeCollection s in arr)
+                    _undo.Push(s);
             }
         }
 
         private void Undo_Click(object sender, RoutedEventArgs e)
         {
-            if (_undo.Count <= 1) return;
+            if (_undo.Count <= 1)
+                return;
 
             _undo.Pop();
             Ink.Strokes = _undo.Peek().Clone();
@@ -272,11 +380,13 @@ namespace FontForge
 
         private void DeleteSelected_Click(object sender, RoutedEventArgs e)
         {
-            var selected = Ink.GetSelectedStrokes();
-            if (selected == null || selected.Count == 0) return;
+            StrokeCollection selected = Ink.GetSelectedStrokes();
 
-            foreach (var s in selected.ToList())
-                Ink.Strokes.Remove(s);
+            if (selected == null || selected.Count == 0)
+                return;
+
+            foreach (Stroke stroke in selected.ToList())
+                Ink.Strokes.Remove(stroke);
 
             Ink.Select(new StrokeCollection());
             PushUndoSnapshot();
@@ -284,16 +394,13 @@ namespace FontForge
 
         private void Ink_SelectionChanged(object sender, EventArgs e)
         {
-            if (!_uiReady) return;
+            if (!_uiReady)
+                return;
 
-            // чтобы в режиме рисования не было ощущения "лассо"
             if (ModeDrawRadio.IsChecked == true)
                 Ink.Select(new StrokeCollection());
         }
 
-        // =========================
-        // SAVE (PNG transparent + ISF)
-        // =========================
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             FontStorage.EnsureFolders(_fontId);
@@ -320,6 +427,7 @@ namespace FontForge
             try
             {
                 Directory.CreateDirectory(System.IO.Path.GetDirectoryName(isfPath) ?? "");
+
                 string tmp = isfPath + ".tmp";
 
                 using (var fs = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.Read))
@@ -329,15 +437,18 @@ namespace FontForge
 
                 TryMoveReplace(tmp, isfPath);
             }
-            catch { }
+            catch
+            {
+                // ISF не обязателен для PNG.
+            }
         }
 
         private string SafeWriteTransparentPng(string preferredPath)
         {
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(preferredPath) ?? "");
 
-            var oldGuideVis = GuideViewbox.Visibility;
-            var oldLinesVis = GuideLinesCanvas.Visibility;
+            Visibility oldGuideVis = GuideViewbox.Visibility;
+            Visibility oldLinesVis = GuideLinesCanvas.Visibility;
 
             GuideViewbox.Visibility = Visibility.Collapsed;
             GuideLinesCanvas.Visibility = Visibility.Collapsed;
@@ -357,20 +468,33 @@ namespace FontForge
             GuideLinesCanvas.Visibility = oldLinesVis;
 
             string tmp = preferredPath + ".tmp";
+
             using (var fs = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.Read))
+            {
                 encoder.Save(fs);
+            }
 
             if (TryMoveReplace(tmp, preferredPath))
                 return preferredPath;
 
             string alt = BuildAlternativePngPath(preferredPath);
+
             if (TryMoveReplace(tmp, alt))
                 return alt;
 
             try
             {
                 File.Copy(tmp, alt, true);
-                try { File.Delete(tmp); } catch { }
+
+                try
+                {
+                    File.Delete(tmp);
+                }
+                catch
+                {
+                    // ignore
+                }
+
                 return alt;
             }
             catch
@@ -385,8 +509,14 @@ namespace FontForge
             {
                 if (File.Exists(target))
                 {
-                    try { File.Delete(target); }
-                    catch { return false; }
+                    try
+                    {
+                        File.Delete(target);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
                 }
 
                 File.Move(tmp, target);
@@ -404,6 +534,7 @@ namespace FontForge
             string name = System.IO.Path.GetFileNameWithoutExtension(preferredPath);
             string ext = System.IO.Path.GetExtension(preferredPath);
             string stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
             return System.IO.Path.Combine(dir, $"{name}_{stamp}{ext}");
         }
 

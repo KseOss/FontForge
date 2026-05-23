@@ -1,76 +1,97 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Media.Animation;
+﻿using System.Windows;
+using System.Windows.Input;
 
 namespace FontForge
 {
     public partial class CreateFontNameDialog : Window
     {
+        private readonly string _currentName;
+        private readonly bool _isRenameMode;
+
         public string? FontName { get; private set; }
 
-        private bool _isThemeAnimating;
-
         public CreateFontNameDialog()
+            : this("", false)
+        {
+        }
+
+        public CreateFontNameDialog(string currentName, bool isRenameMode)
         {
             InitializeComponent();
 
-            // IsChecked = true => светлая (🔆), false => тёмная (🌙)
-
-
-            Loaded += (_, __) => NameBox.Focus();
+            _currentName = currentName ?? "";
+            _isRenameMode = isRenameMode;
         }
 
-
-        private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_isThemeAnimating) return;
-
-            _isThemeAnimating = true;
-
-            // пользователь переключил тумблер:
-
-            // затемнение
-            var fadeTo = new DoubleAnimation
+            if (_isRenameMode)
             {
-                From = 0,
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(140),
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
-            };
+                Title = "Переименовать шрифт";
 
-            fadeTo.Completed += (_, __) =>
+                HeaderText.Text = "Переименовать шрифт";
+                DescriptionText.Text = "Измените текущее название шрифта или исправьте нужную букву.";
+                HintText.Text = "Текущее название уже введено. Можно исправить только нужную часть текста.";
+                OkButton.Content = "Сохранить";
+
+                NameBox.Text = _currentName;
+                NameBox.Focus();
+
+                // Ставим курсор в конец, чтобы пользователь мог удобно исправить букву.
+                NameBox.CaretIndex = NameBox.Text.Length;
+            }
+            else
             {
-                // применяем тему когда “закрыто”
+                Title = "Новый шрифт";
 
-                // возвращаем
-                var fadeBack = new DoubleAnimation
-                {
-                    From = 1,
-                    To = 0,
-                    Duration = TimeSpan.FromMilliseconds(180),
-                    EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
-                };
+                HeaderText.Text = "Создать новый шрифт";
+                DescriptionText.Text = "Введите название, которое будет отображаться в списке ваших шрифтов.";
+                HintText.Text = "Например: Мой почерк, Pisun, Шрифт Ксении";
+                OkButton.Content = "Создать";
 
-                fadeBack.Completed += (___, ____) =>
-                {
-                    _isThemeAnimating = false;
-                };
+                NameBox.Text = "";
+                NameBox.Focus();
+            }
+        }
 
-                FadeOverlay.BeginAnimation(OpacityProperty, fadeBack);
-            };
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                TryConfirm();
+                e.Handled = true;
+            }
 
-            FadeOverlay.BeginAnimation(OpacityProperty, fadeTo);
+            if (e.Key == Key.Escape)
+            {
+                DialogResult = false;
+                e.Handled = true;
+            }
         }
 
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
-            FontName = (NameBox.Text ?? "").Trim();
-            DialogResult = true;
+            TryConfirm();
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
+        }
+
+        private void TryConfirm()
+        {
+            FontName = (NameBox.Text ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(FontName))
+            {
+                AppDialog.Info(this, "Введите название шрифта.", "Название шрифта");
+
+                NameBox.Focus();
+                return;
+            }
+
+            DialogResult = true;
         }
     }
 }

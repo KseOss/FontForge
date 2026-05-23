@@ -13,17 +13,12 @@ namespace FontForge
 
         public string? SelectedChar { get; private set; }
 
-        // Цвета для выделения
-        private static readonly Brush SelectedBackground = new SolidColorBrush(Color.FromRgb(0x23, 0xC5, 0x5E)); // зелёный
-        private static readonly Brush SelectedBorder = new SolidColorBrush(Color.FromRgb(0x12, 0x9A, 0x47));     // темнее
-        private static readonly Brush DefaultBackground = (Brush)new BrushConverter().ConvertFromString("#0A000000");
-        private static readonly Brush DefaultBorder = (Brush)new BrushConverter().ConvertFromString("#12000000");
-
         public SelectLetterDialog(HashSet<string> usedChars)
         {
             InitializeComponent();
-            _used = usedChars;
-
+            Height += 20;
+            Width += 20;
+            _used = usedChars ?? new HashSet<string>();
             BuildLetters();
         }
 
@@ -37,48 +32,123 @@ namespace FontForge
 
             LettersGrid.Children.Clear();
 
-            foreach (var ch in letters)
+            foreach (string ch in letters)
             {
-                var btn = new Button
+                bool isUsed = _used.Contains(ch);
+
+                var letterText = new TextBlock
                 {
-                    Content = ch,
-                    Tag = ch,
-                    Style = (Style)FindResource("Tile"),
-                    IsEnabled = !_used.Contains(ch)
+                    Text = ch,
+                    FontSize = 18,
+                    FontWeight = FontWeights.SemiBold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextAlignment = TextAlignment.Center
                 };
 
-                btn.Click += Letter_Click;
-                LettersGrid.Children.Add(btn);
+                if (isUsed)
+                {
+                    letterText.SetResourceReference(TextBlock.ForegroundProperty, "SecondaryTextBrush");
+                    letterText.Opacity = 0.85;
+                }
+                else
+                {
+                    letterText.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+                    letterText.Opacity = 1;
+                }
+
+                var button = new Button
+                {
+                    Content = letterText,
+                    Tag = ch,
+                    Style = (Style)FindResource("LetterTileButton"),
+                    Opacity = isUsed ? 0.55 : 1,
+                    Cursor = isUsed
+                        ? System.Windows.Input.Cursors.Arrow
+                        : System.Windows.Input.Cursors.Hand,
+                    ToolTip = isUsed
+                        ? $"Символ «{ch}» уже добавлен"
+                        : $"Выбрать символ «{ch}»"
+                };
+
+                if (isUsed)
+                {
+                    button.SetResourceReference(Button.BackgroundProperty, "InputBackgroundBrush");
+                    button.SetResourceReference(Button.BorderBrushProperty, "MutedBorderBrush");
+                }
+                else
+                {
+                    button.SetResourceReference(Button.BackgroundProperty, "SurfaceAltBrush");
+                    button.SetResourceReference(Button.BorderBrushProperty, "MutedBorderBrush");
+                    button.Click += Letter_Click;
+                }
+
+                LettersGrid.Children.Add(button);
             }
         }
 
         private void Letter_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button btn) return;
-            if (!btn.IsEnabled) return;
+            if (sender is not Button button)
+                return;
 
-            // Снять выделение с прошлой кнопки
+            string? ch = button.Tag?.ToString();
+
+            if (string.IsNullOrWhiteSpace(ch))
+                return;
+
+            if (_used.Contains(ch))
+                return;
+
             if (_selectedButton != null)
+                ResetButtonVisual(_selectedButton);
+
+            _selectedButton = button;
+            SelectedChar = ch;
+
+            ApplySelectedVisual(button);
+        }
+
+        private void ApplySelectedVisual(Button button)
+        {
+            button.Opacity = 1;
+            button.SetResourceReference(Button.BackgroundProperty, "ButtonBackgroundBrush");
+            button.SetResourceReference(Button.ForegroundProperty, "ButtonTextBrush");
+            button.SetResourceReference(Button.BorderBrushProperty, "ButtonHoverBrush");
+            button.BorderThickness = new Thickness(2);
+
+            if (button.Content is TextBlock text)
             {
-                _selectedButton.Background = DefaultBackground;
-                _selectedButton.BorderBrush = DefaultBorder;
-                _selectedButton.BorderThickness = new Thickness(1);
+                text.SetResourceReference(TextBlock.ForegroundProperty, "ButtonTextBrush");
+                text.Opacity = 1;
             }
+        }
 
-            // Выделить новую
-            _selectedButton = btn;
-            SelectedChar = btn.Tag?.ToString();
+        private void ResetButtonVisual(Button button)
+        {
+            button.Opacity = 1;
+            button.SetResourceReference(Button.BackgroundProperty, "SurfaceAltBrush");
+            button.SetResourceReference(Button.ForegroundProperty, "TextBrush");
+            button.SetResourceReference(Button.BorderBrushProperty, "MutedBorderBrush");
+            button.BorderThickness = new Thickness(1);
 
-            btn.Background = SelectedBackground;
-            btn.BorderBrush = SelectedBorder;
-            btn.BorderThickness = new Thickness(2);
+            if (button.Content is TextBlock text)
+            {
+                text.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+                text.Opacity = 1;
+            }
         }
 
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(SelectedChar))
             {
-                MessageBox.Show("Выберите символ.");
+                MessageBox.Show(
+                    "Выберите символ.",
+                    "Выбор символа",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
                 return;
             }
 

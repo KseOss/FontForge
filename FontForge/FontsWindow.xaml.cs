@@ -91,7 +91,7 @@ namespace FontForge
 
             if (string.IsNullOrWhiteSpace(name))
             {
-                MessageBox.Show("Введите название шрифта.");
+                AppDialog.Info(this, "Введите название шрифта.");
                 return;
             }
 
@@ -114,10 +114,13 @@ namespace FontForge
             SaveAll();
             RefreshViews();
 
-            OpenEditor(created);
+            if (App.CurrentThemeSettings.AfterCreateFont == "OpenEditor")
+            {
+                OpenEditor(created);
 
-            LoadAll();
-            RefreshViews();
+                LoadAll();
+                RefreshViews();
+            }
         }
 
         private void EditFont_Click(object sender, RoutedEventArgs e)
@@ -165,14 +168,13 @@ namespace FontForge
 
             if (found.IsDeleted)
             {
-                MessageBox.Show("Этот шрифт находится в корзине. Сначала восстановите его.");
+                AppDialog.Warning(this, "Этот шрифт находится в корзине. Сначала восстановите его.");
                 return;
             }
 
-            var dialog = new CreateFontNameDialog
+            var dialog = new CreateFontNameDialog(found.Name, true)
             {
-                Owner = this,
-                Title = "Переименовать шрифт"
+                Owner = this
             };
 
             bool? ok = dialog.ShowDialog();
@@ -184,13 +186,19 @@ namespace FontForge
 
             if (string.IsNullOrWhiteSpace(newName))
             {
-                MessageBox.Show("Введите название шрифта.");
+                AppDialog.Info(this, "Введите название шрифта.", "Переименование");
                 return;
             }
 
-            if (_allFonts.Any(f => !f.IsDeleted && f.Id != found.Id && string.Equals(f.Name, newName, StringComparison.OrdinalIgnoreCase)))
+            if (string.Equals(found.Name, newName, StringComparison.Ordinal))
+                return;
+
+            if (_allFonts.Any(f =>
+                    !f.IsDeleted &&
+                    f.Id != found.Id &&
+                    string.Equals(f.Name, newName, StringComparison.OrdinalIgnoreCase)))
             {
-                MessageBox.Show("Шрифт с таким названием уже существует.");
+                AppDialog.Warning(this, "Шрифт с таким названием уже существует.", "Переименование");
                 return;
             }
 
@@ -209,6 +217,17 @@ namespace FontForge
 
             if (found == null)
                 return;
+
+            if (App.CurrentThemeSettings.ConfirmMoveToTrash)
+            {
+                MessageBoxResult result = AppDialog.Question(
+                    this,
+                    $"Переместить шрифт «{found.Name}» в корзину?",
+                    "Подтверждение");
+
+                if (result != MessageBoxResult.Yes)
+                    return;
+            }
 
             found.IsDeleted = true;
             found.DeletedAt = DateTime.Now;
@@ -239,11 +258,12 @@ namespace FontForge
             if (sender is not Button button || button.DataContext is not CreatedFont font)
                 return;
 
-            MessageBoxResult result = MessageBox.Show(
+            MessageBoxResult result = AppDialog.Show(
+                this,
+                "Удаление",
                 "Удалить шрифт навсегда? Это действие нельзя отменить.",
-                "Подтверждение",
                 MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                AppDialogKind.Warning);
 
             if (result != MessageBoxResult.Yes)
                 return;
