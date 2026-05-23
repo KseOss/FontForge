@@ -27,12 +27,22 @@ namespace FontForge.Classes
         private const int Rows = 7;
         private const int ItemsPerPage = Columns * Rows;
 
+        private const char SymbolSeparator = '\u001F';
+
         public static void SaveTemplatePdf(string filePath, string fontName, List<string> symbols)
         {
             if (symbols == null || symbols.Count == 0)
                 throw new InvalidOperationException("Нет символов для создания шаблона.");
 
             Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? "");
+
+            symbols = symbols
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .ToList();
+
+            if (symbols.Count == 0)
+                throw new InvalidOperationException("Нет символов для создания шаблона.");
 
             int pageCount = (int)Math.Ceiling(symbols.Count / (double)ItemsPerPage);
 
@@ -53,29 +63,121 @@ namespace FontForge.Classes
         {
             try
             {
-                string text = File.ReadAllText(pdfPath, Encoding.ASCII);
-
-                string marker = "/FontForgeSymbols (";
-                int start = text.IndexOf(marker, StringComparison.Ordinal);
-
-                if (start < 0)
+                if (string.IsNullOrWhiteSpace(pdfPath) || !File.Exists(pdfPath))
                     return new List<string>();
 
-                start += marker.Length;
+                byte[] bytes = File.ReadAllBytes(pdfPath);
+                string text = Encoding.Latin1.GetString(bytes);
 
-                int end = text.IndexOf(")", start, StringComparison.Ordinal);
+                List<string> fromComment = TryReadSymbolsFromComment(text);
 
-                if (end < 0)
+                if (fromComment.Count > 0)
+                    return fromComment;
+
+                List<string> fromInfo = TryReadSymbolsFromInfoDictionary(text);
+
+                if (fromInfo.Count > 0)
+                    return fromInfo;
+
+                return new List<string>();
+            }
+            catch
+            {
+                return new List<string>();
+            }
+        }
+
+        private static List<string> TryReadSymbolsFromComment(string text)
+        {
+            string marker = "% FontForgeSymbols:";
+
+            int start = text.IndexOf(marker, StringComparison.Ordinal);
+
+            if (start < 0)
+                return new List<string>();
+
+            start += marker.Length;
+
+            int end = text.IndexOf('\n', start);
+
+            if (end < 0)
+                end = text.Length;
+
+            string base64 = text.Substring(start, end - start).Trim();
+
+            return DecodeSymbolsBase64(base64);
+        }
+
+        private static List<string> TryReadSymbolsFromInfoDictionary(string text)
+        {
+            string marker = "/FontForgeSymbols";
+
+            int markerIndex = text.IndexOf(marker, StringComparison.Ordinal);
+
+            if (markerIndex < 0)
+                return new List<string>();
+
+            int index = markerIndex + marker.Length;
+
+            while (index < text.Length && char.IsWhiteSpace(text[index]))
+                index++;
+
+            if (index >= text.Length || text[index] != '(')
+                return new List<string>();
+
+            index++;
+
+            string base64 = ReadPdfLiteralString(text, index);
+
+            return DecodeSymbolsBase64(base64);
+        }
+
+        private static string ReadPdfLiteralString(string text, int start)
+        {
+            var builder = new StringBuilder();
+
+            bool escaped = false;
+
+            for (int i = start; i < text.Length; i++)
+            {
+                char ch = text[i];
+
+                if (escaped)
+                {
+                    builder.Append(ch);
+                    escaped = false;
+                    continue;
+                }
+
+                if (ch == '\\')
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (ch == ')')
+                    break;
+
+                builder.Append(ch);
+            }
+
+            return builder.ToString();
+        }
+
+        private static List<string> DecodeSymbolsBase64(string base64)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(base64))
                     return new List<string>();
 
-                string base64 = text.Substring(start, end - start);
-
-                byte[] bytes = Convert.FromBase64String(base64);
+                byte[] bytes = Convert.FromBase64String(base64.Trim());
                 string raw = Encoding.UTF8.GetString(bytes);
 
                 return raw
-                    .Split('\u001F')
+                    .Split(SymbolSeparator)
                     .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct()
                     .ToList();
             }
             catch
@@ -389,8 +491,17 @@ namespace FontForge.Classes
         {
             using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
 
+            string symbolsRaw = string.Join(SymbolSeparator, symbols);
+            string symbolsBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(symbolsRaw));
+            string fontNameBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(fontName ?? ""));
+
             WriteAscii(fs, "%PDF-1.4\n");
             WriteAscii(fs, "% FontForge image template PDF\n");
+
+            // Главная защита от ошибки А, Б, В:
+            // список выбранных символов хранится прямо внутри PDF простым комментарием.
+            WriteAscii(fs, "% FontForgeSymbols: " + symbolsBase64 + "\n");
+            WriteAscii(fs, "% FontForgeFontName: " + fontNameBase64 + "\n");
 
             var offsets = new List<long>();
 
@@ -448,10 +559,6 @@ namespace FontForge.Classes
 
             WriteObject(fs, offsets, pagesObject,
                 $"<< /Type /Pages /Kids [{kids}] /Count {pageImages.Count} >>");
-
-            string symbolsRaw = string.Join('\u001F', symbols);
-            string symbolsBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(symbolsRaw));
-            string fontNameBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(fontName ?? ""));
 
             WriteObject(fs, offsets, infoObject,
                 $"<< /Producer (FontForge) /FontForgeSymbols ({symbolsBase64}) /FontForgeFontName ({fontNameBase64}) >>");

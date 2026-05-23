@@ -810,9 +810,17 @@ namespace FontForge
 
                 ForceRefreshAfterImport();
 
+                string loadedSymbolsText = symbols.Count <= 40
+                    ? string.Join(", ", symbols.Select(x => $"«{x}»"))
+                    : string.Join(", ", symbols.Take(40).Select(x => $"«{x}»")) + " ...";
+
                 AppDialog.Success(
                     this,
-                    $"Загрузка PDF завершена.\n\nДобавлено символов: {imported}\nПропущено: {skipped}",
+                    "Загрузка PDF завершена.\n\n" +
+                    $"Добавлено символов: {imported}\n" +
+                    $"Пропущено: {skipped}\n\n" +
+                    "Символы, которые использовались при загрузке:\n" +
+                    loadedSymbolsText,
                     "Загрузка PDF");
             }
             catch (Exception ex)
@@ -917,22 +925,37 @@ namespace FontForge
             List<string> symbolsFromPdf = SimplePdfTemplateWriter.TryReadTemplateSymbols(pdfPath);
 
             if (symbolsFromPdf.Count > 0)
+            {
+                SaveLastTemplateSymbols(symbolsFromPdf);
+                SaveSidecarSymbols(pdfPath, symbolsFromPdf);
                 return symbolsFromPdf;
+            }
 
             List<string> symbolsFromSidecar = LoadSidecarSymbols(pdfPath);
 
             if (symbolsFromSidecar.Count > 0)
+            {
+                SaveLastTemplateSymbols(symbolsFromSidecar);
                 return symbolsFromSidecar;
+            }
 
-            List<string> lastSymbols = LoadLastTemplateSymbols();
+            MessageBoxResult result = AppDialog.Show(
+                this,
+                "Символы PDF",
+                "Программа не смогла автоматически найти список символов внутри PDF.\n\n" +
+                "Это бывает, если PDF был пересохранён в другой программе, отсканирован или рядом с ним нет файла .symbols.txt.\n\n" +
+                "Сейчас нужно вручную отметить ТОЛЬКО те символы, которые есть в этом PDF-шаблоне.\n\n" +
+                "Важно: не нажимайте «Выбрать всё», если в PDF нет всех букв.",
+                MessageBoxButton.OKCancel,
+                AppDialogKind.Question);
 
-            if (lastSymbols.Count > 0)
-                return lastSymbols;
+            if (result != MessageBoxResult.OK)
+                return new List<string>();
 
             var selectDialog = new TemplateSymbolsDialog(
                 BuildTemplateSymbols(),
                 null,
-                selectAllByDefault: true)
+                selectAllByDefault: false)
             {
                 Owner = this,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -951,6 +974,7 @@ namespace FontForge
             }
 
             SaveLastTemplateSymbols(selected);
+            SaveSidecarSymbols(pdfPath, selected);
 
             return selected;
         }
