@@ -11,6 +11,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
+using Path = System.IO.Path;
 
 namespace FontForge
 {
@@ -21,7 +23,9 @@ namespace FontForge
         private readonly Guid _variantId;
 
         private readonly Stack<StrokeCollection> _undo = new();
+
         private bool _uiReady = false;
+        private bool _eraseUndoQueued = false;
 
         public string? SavedImagePath { get; private set; }
 
@@ -44,6 +48,7 @@ namespace FontForge
             DrawGuides();
             ApplyGuideVisibility();
             ApplyBrush();
+            ApplyEraser();
 
             ModeDrawRadio.IsChecked = true;
             ApplyMode();
@@ -52,7 +57,8 @@ namespace FontForge
 
             PushUndoSnapshot();
 
-            UpdatePrettySliderFill();
+            UpdatePrettySliderFill(BrushSizeSlider);
+            UpdatePrettySliderFill(EraserSizeSlider);
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -61,6 +67,8 @@ namespace FontForge
                 return;
 
             DrawGuides();
+            UpdatePrettySliderFill(BrushSizeSlider);
+            UpdatePrettySliderFill(EraserSizeSlider);
         }
 
         private void LoadExistingStrokesIfAny()
@@ -68,7 +76,7 @@ namespace FontForge
             try
             {
                 string pngPath = FontStorage.BuildVariantFilePath(_fontId, _ch, _variantId);
-                string isfPath = System.IO.Path.ChangeExtension(pngPath, ".isf");
+                string isfPath = Path.ChangeExtension(pngPath, ".isf");
 
                 if (File.Exists(isfPath))
                 {
@@ -87,8 +95,7 @@ namespace FontForge
             if (!_uiReady)
                 return;
 
-            if (ModeDrawRadio.IsChecked == true)
-                ApplyMode();
+            ApplyMode();
         }
 
         private void Ink_PreviewStylusDown_ForceMode(object sender, StylusDownEventArgs e)
@@ -96,8 +103,7 @@ namespace FontForge
             if (!_uiReady)
                 return;
 
-            if (ModeDrawRadio.IsChecked == true)
-                ApplyMode();
+            ApplyMode();
         }
 
         private void ModeRadio_Checked(object sender, RoutedEventArgs e)
@@ -110,23 +116,32 @@ namespace FontForge
 
         private void ApplyMode()
         {
-            bool edit = ModeEditRadio.IsChecked == true;
-
-            if (edit)
+            if (ModeEditRadio.IsChecked == true)
             {
                 Ink.EditingMode = InkCanvasEditingMode.Select;
                 Ink.EditingModeInverted = InkCanvasEditingMode.EraseByStroke;
                 Ink.Cursor = Cursors.Arrow;
                 DeleteSelectedButton.Visibility = Visibility.Visible;
+                return;
             }
-            else
+
+            if (ModeEraseRadio.IsChecked == true)
             {
                 Ink.Select(new StrokeCollection());
-                Ink.EditingMode = InkCanvasEditingMode.Ink;
-                Ink.EditingModeInverted = InkCanvasEditingMode.EraseByStroke;
-                Ink.Cursor = Cursors.Pen;
+                Ink.EditingMode = InkCanvasEditingMode.EraseByPoint;
+                Ink.EditingModeInverted = InkCanvasEditingMode.Ink;
+                Ink.Cursor = Cursors.Cross;
                 DeleteSelectedButton.Visibility = Visibility.Collapsed;
+                ApplyEraser();
+                return;
             }
+
+            Ink.Select(new StrokeCollection());
+            Ink.EditingMode = InkCanvasEditingMode.Ink;
+            Ink.EditingModeInverted = InkCanvasEditingMode.EraseByStroke;
+            Ink.Cursor = Cursors.Pen;
+            DeleteSelectedButton.Visibility = Visibility.Collapsed;
+            ApplyBrush();
         }
 
         private void ShowGuideCheck_Changed(object sender, RoutedEventArgs e)
@@ -306,7 +321,16 @@ namespace FontForge
                 return;
 
             ApplyBrush();
-            UpdatePrettySliderFill();
+            UpdatePrettySliderFill(BrushSizeSlider);
+        }
+
+        private void EraserSettings_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_uiReady)
+                return;
+
+            ApplyEraser();
+            UpdatePrettySliderFill(EraserSizeSlider);
         }
 
         private void ApplyBrush()
@@ -323,19 +347,26 @@ namespace FontForge
             };
         }
 
-        private void UpdatePrettySliderFill()
+        private void ApplyEraser()
         {
-            if (BrushSizeSlider.Template == null)
+            double size = Math.Max(4, EraserSizeSlider.Value);
+
+            Ink.EraserShape = new EllipseStylusShape(size, size);
+        }
+
+        private void UpdatePrettySliderFill(Slider slider)
+        {
+            if (slider == null || slider.Template == null)
                 return;
 
-            var track = BrushSizeSlider.Template.FindName("PART_Track", BrushSizeSlider) as Track;
-            var fill = BrushSizeSlider.Template.FindName("TrackFill", BrushSizeSlider) as Border;
+            var track = slider.Template.FindName("PART_Track", slider) as Track;
+            var fill = slider.Template.FindName("TrackFill", slider) as Border;
 
             if (track == null || fill == null)
                 return;
 
-            double range = Math.Max(1, BrushSizeSlider.Maximum - BrushSizeSlider.Minimum);
-            double k = (BrushSizeSlider.Value - BrushSizeSlider.Minimum) / range;
+            double range = Math.Max(1, slider.Maximum - slider.Minimum);
+            double k = (slider.Value - slider.Minimum) / range;
 
             double trackWidth = Math.Max(0, track.ActualWidth);
             fill.Width = trackWidth * k;
@@ -346,13 +377,31 @@ namespace FontForge
             PushUndoSnapshot();
         }
 
+        private void Ink_StrokeErasing(object sender, InkCanvasStrokeErasingEventArgs e)
+        {
+            if (!_uiReady)
+                return;
+
+            if (_eraseUndoQueued)
+                return;
+
+            _eraseUndoQueued = true;
+
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _eraseUndoQueued = false;
+                PushUndoSnapshot();
+
+            }), DispatcherPriority.Background);
+        }
+
         private void PushUndoSnapshot()
         {
             _undo.Push(Ink.Strokes.Clone());
 
             if (_undo.Count > 60)
             {
-                var arr = _undo.Reverse().Take(60).Reverse().ToArray();
+                StrokeCollection[] arr = _undo.Reverse().Take(60).Reverse().ToArray();
 
                 _undo.Clear();
 
@@ -367,15 +416,20 @@ namespace FontForge
                 return;
 
             _undo.Pop();
+
             Ink.Strokes = _undo.Peek().Clone();
             Ink.Select(new StrokeCollection());
+
+            ApplyMode();
         }
 
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
             Ink.Strokes.Clear();
             Ink.Select(new StrokeCollection());
+
             PushUndoSnapshot();
+            ApplyMode();
         }
 
         private void DeleteSelected_Click(object sender, RoutedEventArgs e)
@@ -389,7 +443,9 @@ namespace FontForge
                 Ink.Strokes.Remove(stroke);
 
             Ink.Select(new StrokeCollection());
+
             PushUndoSnapshot();
+            ApplyMode();
         }
 
         private void Ink_SelectionChanged(object sender, EventArgs e)
@@ -397,7 +453,7 @@ namespace FontForge
             if (!_uiReady)
                 return;
 
-            if (ModeDrawRadio.IsChecked == true)
+            if (ModeDrawRadio.IsChecked == true || ModeEraseRadio.IsChecked == true)
                 Ink.Select(new StrokeCollection());
         }
 
@@ -406,7 +462,7 @@ namespace FontForge
             FontStorage.EnsureFolders(_fontId);
 
             string preferredPng = FontStorage.BuildVariantFilePath(_fontId, _ch, _variantId);
-            string preferredIsf = System.IO.Path.ChangeExtension(preferredPng, ".isf");
+            string preferredIsf = Path.ChangeExtension(preferredPng, ".isf");
 
             SafeWriteIsf(preferredIsf);
 
@@ -414,7 +470,7 @@ namespace FontForge
 
             if (!string.Equals(finalPng, preferredPng, StringComparison.OrdinalIgnoreCase))
             {
-                string finalIsf = System.IO.Path.ChangeExtension(finalPng, ".isf");
+                string finalIsf = Path.ChangeExtension(finalPng, ".isf");
                 SafeWriteIsf(finalIsf);
             }
 
@@ -426,7 +482,7 @@ namespace FontForge
         {
             try
             {
-                Directory.CreateDirectory(System.IO.Path.GetDirectoryName(isfPath) ?? "");
+                Directory.CreateDirectory(Path.GetDirectoryName(isfPath) ?? "");
 
                 string tmp = isfPath + ".tmp";
 
@@ -445,7 +501,7 @@ namespace FontForge
 
         private string SafeWriteTransparentPng(string preferredPath)
         {
-            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(preferredPath) ?? "");
+            Directory.CreateDirectory(Path.GetDirectoryName(preferredPath) ?? "");
 
             Visibility oldGuideVis = GuideViewbox.Visibility;
             Visibility oldLinesVis = GuideLinesCanvas.Visibility;
@@ -530,12 +586,12 @@ namespace FontForge
 
         private static string BuildAlternativePngPath(string preferredPath)
         {
-            string dir = System.IO.Path.GetDirectoryName(preferredPath) ?? "";
-            string name = System.IO.Path.GetFileNameWithoutExtension(preferredPath);
-            string ext = System.IO.Path.GetExtension(preferredPath);
+            string dir = Path.GetDirectoryName(preferredPath) ?? "";
+            string name = Path.GetFileNameWithoutExtension(preferredPath);
+            string ext = Path.GetExtension(preferredPath);
             string stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
-            return System.IO.Path.Combine(dir, $"{name}_{stamp}{ext}");
+            return Path.Combine(dir, $"{name}_{stamp}{ext}");
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

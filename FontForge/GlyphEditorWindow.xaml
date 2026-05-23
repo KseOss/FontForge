@@ -19,8 +19,6 @@
 
         <SolidColorBrush x:Key="EditorPaperBrush" Color="#F3F4EF"/>
         <SolidColorBrush x:Key="EditorPaperBorderBrush" Color="#C9D0C7"/>
-        <SolidColorBrush x:Key="EditorSoftGuideBrush" Color="#8B938B"/>
-        <SolidColorBrush x:Key="EditorSoftGuideTextBrush" Color="#667066"/>
 
         <Style x:Key="EditorSideCard" TargetType="Border">
             <Setter Property="CornerRadius" Value="24"/>
@@ -348,6 +346,12 @@
                                              Checked="ModeRadio_Checked"
                                              Margin="0,0,0,10"/>
 
+                                <RadioButton x:Name="ModeEraseRadio"
+                                             Style="{StaticResource AppRadioButton}"
+                                             Content="Ластик"
+                                             Checked="ModeRadio_Checked"
+                                             Margin="0,0,0,10"/>
+
                                 <RadioButton x:Name="ModeEditRadio"
                                              Style="{StaticResource AppRadioButton}"
                                              Content="Редактирование линий"
@@ -418,6 +422,42 @@
                             </StackPanel>
                         </Border>
 
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
+                                <TextBlock Text="Параметры ластика"
+                                           Style="{StaticResource SectionTitle}"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Размер ластика"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding ElementName=EraserSizeSlider, Path=Value, StringFormat={}{0:0}px}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
+
+                                <Slider x:Name="EraserSizeSlider"
+                                        Style="{StaticResource PrettySlider}"
+                                        Minimum="8"
+                                        Maximum="80"
+                                        Value="28"
+                                        ValueChanged="EraserSettings_Changed"/>
+
+                                <TextBlock Text="Выберите режим «Ластик» и проведите по части линии, которую нужно стереть."
+                                           Margin="0,8,0,0"
+                                           TextWrapping="Wrap"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+
                     </StackPanel>
                 </ScrollViewer>
 
@@ -429,9 +469,9 @@
                             Click="Save_Click"/>
 
                     <Button Content="← Назад"
-                        Margin="0,10,0,0"
-                        Style="{StaticResource SecondaryButton}"
-                        Click="Cancel_Click"/>
+                            Margin="0,10,0,0"
+                            Style="{StaticResource SecondaryButton}"
+                            Click="Cancel_Click"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -464,7 +504,7 @@
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextBrush}"/>
 
-                        <TextBlock Text="Рисуйте хвостики буквы до вертикальных линий соединения."
+                        <TextBlock Text="Рисование — создание линий, ластик — стирание частей линий."
                                    Margin="0,4,0,0"
                                    FontSize="12"
                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -497,7 +537,6 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Мягкий бумажный холст -->
                 <Border Grid.Row="1"
                         CornerRadius="22"
                         Background="{StaticResource EditorPaperBrush}"
@@ -535,6 +574,7 @@
                                    Background="Transparent"
                                    SelectionChanged="Ink_SelectionChanged"
                                    StrokeCollected="Ink_StrokeCollected"
+                                   StrokeErasing="Ink_StrokeErasing"
                                    PreviewMouseDown="Ink_PreviewMouseDown_ForceMode"
                                    PreviewStylusDown="Ink_PreviewStylusDown_ForceMode"/>
                     </Grid>
