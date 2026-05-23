@@ -19,9 +19,6 @@ namespace FontForge.Classes
         // Символы
         public List<GlyphEntry> Glyphs { get; set; } = new List<GlyphEntry>();
 
-        // ВАЖНО:
-        // Это нужно, чтобы ComboBox, ListBox и другие элементы
-        // показывали название шрифта, а не FontForge.Classes.CreatedFont.
         public override string ToString()
         {
             return string.IsNullOrWhiteSpace(Name)

@@ -64,7 +64,6 @@ namespace FontForge.Classes
         {
             EnsureFolders(fontId);
 
-            // имя символа -> код
             int code = ch.Length > 0 ? char.ConvertToUtf32(ch, 0) : 0;
             string safeChar = "U" + code.ToString("X4");
 
@@ -76,17 +75,14 @@ namespace FontForge.Classes
             var g = font.Glyphs.FirstOrDefault(x => x.Char == ch);
             if (g == null) return;
 
-            // если нет вариантов — ок
             if (g.Variants.Count == 0) return;
 
-            // если нет дефолтного — сделать первым
             if (!g.Variants.Any(v => v.IsDefault))
             {
                 g.Variants[0].IsDefault = true;
                 return;
             }
 
-            // если дефолтных несколько — оставить один
             bool first = true;
             foreach (var v in g.Variants)
             {
