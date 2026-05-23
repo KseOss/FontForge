@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Редактирование шрифта"
-        Height="720"
+        Height="795"
         Width="1120"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
@@ -27,8 +27,8 @@
 
         <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Height" Value="46"/>
-            <Setter Property="MinWidth" Value="140"/>
-            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="MinWidth" Value="130"/>
+            <Setter Property="Padding" Value="14,0"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -99,6 +99,54 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="SmallActionButton" TargetType="Button">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinWidth" Value="105"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                CornerRadius="17"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.78"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.42"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SmallDangerButton" TargetType="Button" BasedOn="{StaticResource SmallActionButton}">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource DangerTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
         </Style>
 
         <Style x:Key="PrettySlider" TargetType="Slider">
@@ -191,7 +239,6 @@
             </Setter>
         </Style>
 
-        <!-- Красивый ScrollBar для блока с буквами -->
         <Style x:Key="GlyphScrollThumb" TargetType="Thumb">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="Opacity" Value="0.55"/>
@@ -229,7 +276,6 @@
                             <Track x:Name="PART_Track"
                                    IsDirectionReversed="True"
                                    Margin="4">
-
                                 <Track.DecreaseRepeatButton>
                                     <RepeatButton Command="ScrollBar.PageUpCommand"
                                                   Opacity="0"
@@ -252,17 +298,21 @@
             </Setter>
         </Style>
 
-        <!-- Карточка символа -->
         <Style x:Key="GlyphTileCard" TargetType="Border">
-            <Setter Property="Width" Value="118"/>
-            <Setter Property="Height" Value="126"/>
+            <Setter Property="Width" Value="132"/>
+            <Setter Property="Height" Value="166"/>
             <Setter Property="Margin" Value="0,0,12,12"/>
             <Setter Property="Padding" Value="10"/>
             <Setter Property="CornerRadius" Value="16"/>
             <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="GlyphDeleteButton" TargetType="Button">
@@ -297,6 +347,39 @@
             </Setter>
         </Style>
 
+        <Style x:Key="TileMiniButton" TargetType="Button">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                CornerRadius="10"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="8,0"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.75"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
     <Grid Margin="24">
@@ -309,11 +392,6 @@
 
         <!-- Заголовок -->
         <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
             <StackPanel>
                 <TextBlock Text="Предпросмотр"
                            FontSize="26"
@@ -331,7 +409,6 @@
         <Border Grid.Row="1"
                 Margin="0,18,0,0"
                 Style="{StaticResource Card}">
-
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -381,8 +458,7 @@
                                  BorderBrush="{DynamicResource MutedBorderBrush}"
                                  BorderThickness="1"
                                  Padding="12,0"
-                                 TextChanged="PreviewInput_TextChanged"
-                                 Text="АБВГДЕ ЁЖЗИЙКЛМНОП РСТУФХЦЧШЩЪЫЬЭЮЯ"/>
+                                 TextChanged="PreviewInput_TextChanged"/>
                     </StackPanel>
 
                     <Button Grid.Column="1"
@@ -399,7 +475,6 @@
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
                         Padding="12">
-
                     <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Disabled">
                         <WrapPanel x:Name="PreviewRenderPanel"
@@ -413,7 +488,6 @@
         <Border Grid.Row="2"
                 Margin="0,18,0,0"
                 Style="{StaticResource Card}">
-
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -422,17 +496,49 @@
 
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="Символы шрифта"
-                               FontSize="18"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextBrush}"/>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Символы шрифта"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextBrush}"/>
+
+                        <TextBlock x:Name="SelectedGlyphCountText"
+                                   Margin="0,4,0,0"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="2"
+                            Content="Выбрать всё"
+                            Style="{StaticResource SmallActionButton}"
+                            Margin="0,0,8,0"
+                            Click="SelectAllGlyphs_Click"/>
+
+                    <Button x:Name="ClearSelectionButton"
+                            Grid.Column="3"
+                            Content="Снять выбор"
+                            Style="{StaticResource SmallActionButton}"
+                            Margin="0,0,8,0"
+                            Click="ClearGlyphSelection_Click"/>
+
+                    <Button x:Name="DeleteSelectedButton"
+                            Grid.Column="4"
+                            Content="Удалить выбранные"
+                            Style="{StaticResource SmallDangerButton}"
+                            Width="150"
+                            Margin="0,0,14,0"
+                            Click="DeleteSelectedGlyphs_Click"/>
 
                     <TextBlock x:Name="GlyphCountText"
-                               Grid.Column="1"
+                               Grid.Column="5"
                                VerticalAlignment="Center"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </Grid>
@@ -442,7 +548,6 @@
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="0,0,8,0">
-
                     <ScrollViewer.Resources>
                         <Style TargetType="ScrollBar" BasedOn="{StaticResource GlyphScrollBar}"/>
                     </ScrollViewer.Resources>
@@ -456,30 +561,37 @@
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource GlyphTileCard}"
-                                        MouseLeftButtonUp="GlyphCard_MouseLeftButtonUp">
-
+                                <Border Style="{StaticResource GlyphTileCard}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
                                         <Grid Grid.Row="0">
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <TextBlock Text="{Binding Char}"
+                                            <CheckBox Grid.Column="0"
+                                                      IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      VerticalAlignment="Center"
+                                                      Margin="0,0,7,0"
+                                                      Click="GlyphCheckBox_Click"/>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Char}"
                                                        FontSize="14"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextBrush}"
                                                        VerticalAlignment="Center"/>
 
-                                            <TextBlock Grid.Column="2"
+                                            <TextBlock Grid.Column="3"
                                                        Text="•"
                                                        FontSize="24"
                                                        FontWeight="Black"
@@ -488,7 +600,7 @@
                                                        Margin="0,0,4,0"
                                                        Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                                            <Button Grid.Column="3"
+                                            <Button Grid.Column="4"
                                                     Style="{StaticResource GlyphDeleteButton}"
                                                     ToolTip="Удалить символ"
                                                     Click="DeleteGlyph_Click">
@@ -501,17 +613,21 @@
                                         </Grid>
 
                                         <Border Grid.Row="1"
-                                                Margin="0,8,0,0"
+                                                Margin="0,8,0,8"
                                                 CornerRadius="10"
                                                 Background="#F3F4EF"
                                                 BorderBrush="#1A000000"
                                                 BorderThickness="1">
-
                                             <Image Source="{Binding DefaultImagePath}"
                                                    Stretch="Uniform"
                                                    Margin="6"
                                                    RenderOptions.BitmapScalingMode="HighQuality"/>
                                         </Border>
+
+                                        <Button Grid.Row="2"
+                                                Content="Редактировать"
+                                                Style="{StaticResource TileMiniButton}"
+                                                Click="EditGlyphFromTile_Click"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -524,41 +640,59 @@
         <!-- Нижние кнопки -->
         <Grid Grid.Row="3"
               Margin="0,18,0,0">
-
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button Content="Назад"
+            <Button Grid.Column="0"
+                    Content="Назад"
                     Style="{StaticResource PrimaryButton}"
-                    Width="140"
+                    Width="130"
                     Click="Back_Click"/>
 
             <Button Grid.Column="2"
+                    Content="PDF-шаблон"
+                    ToolTip="Создать PDF-шаблон для печати"
+                    Style="{StaticResource PrimaryButton}"
+                    Width="135"
+                    Click="CreateTemplatePdf_Click"/>
+
+            <Button Grid.Column="3"
+                    Margin="10,0,0,0"
+                    Content="Загрузить PDF"
+                    ToolTip="Загрузить заполненный PDF-шаблон"
+                    Style="{StaticResource PrimaryButton}"
+                    Width="145"
+                    Click="ImportTemplatePdf_Click"/>
+
+            <Button Grid.Column="4"
+                    Margin="10,0,0,0"
                     Content="Новый символ"
                     ToolTip="Нарисовать новый символ"
                     Style="{StaticResource PrimaryButton}"
-                    Width="170"
+                    Width="135"
                     Click="AddGlyph_Click"/>
 
-            <Button Grid.Column="3"
+            <Button Grid.Column="5"
                     Margin="10,0,0,0"
                     Content="Экспорт TTF/OTF"
                     ToolTip="Сохранить шрифт в TTF или OTF"
                     Style="{StaticResource PrimaryButton}"
-                    Width="170"
+                    Width="150"
                     Click="ExportFontFile_Click"/>
 
-            <Button Grid.Column="4"
+            <Button Grid.Column="6"
                     Margin="10,0,0,0"
                     Content="Редактор текста"
                     ToolTip="Открыть редактор текста и PDF"
                     Style="{StaticResource PrimaryButton}"
-                    Width="180"
+                    Width="145"
                     Click="OpenDocumentEditor_Click"/>
         </Grid>
 
