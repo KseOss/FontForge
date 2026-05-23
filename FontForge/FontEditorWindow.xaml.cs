@@ -1555,13 +1555,17 @@ namespace FontForge
 
                 string message =
                     "Шрифт успешно сохранён.\n\n" +
-                    $"Экспортировано символов: {result.ExportedGlyphCount}";
+                    $"Экспортировано символов: {result.ExportedGlyphCount}\n" +
+                    $"Из редактора линий: {result.ExportedFromIsfCount}\n" +
+                    $"Из PNG/PDF-шаблонов: {result.ExportedFromPngCount}";
 
                 if (result.SkippedGlyphCount > 0)
                 {
                     message +=
-                        "\nПропущено символов: " + result.SkippedGlyphCount +
-                        "\n\nНекоторые символы могли быть пропущены, если у них не найден .isf-файл с контурами.";
+                        "\n\nПропущено символов: " + result.SkippedGlyphCount;
+
+                    if (result.SkippedChars.Count > 0)
+                        message += "\nСимволы: " + string.Join(", ", result.SkippedChars.Select(x => $"«{x}»"));
                 }
 
                 AppDialog.Success(this, message, "Экспорт шрифта");

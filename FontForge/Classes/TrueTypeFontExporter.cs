@@ -6,6 +6,8 @@ using System.Text;
 using System.Windows;
 using System.Windows.Ink;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace FontForge.Classes
 {
@@ -13,6 +15,8 @@ namespace FontForge.Classes
     {
         public int ExportedGlyphCount { get; set; }
         public int SkippedGlyphCount { get; set; }
+        public int ExportedFromIsfCount { get; set; }
+        public int ExportedFromPngCount { get; set; }
         public List<string> SkippedChars { get; set; } = new List<string>();
     }
 
@@ -24,6 +28,8 @@ namespace FontForge.Classes
         private const int Descender = -200;
         private const int LineGap = 200;
 
+        private const int PngMaxGridSize = 82;
+
         public static FontExportResult Export(CreatedFont font, string outputPath)
         {
             if (font == null)
@@ -34,23 +40,21 @@ namespace FontForge.Classes
 
             var result = new FontExportResult();
 
-            var glyphs = new List<ExportGlyph>();
-
-            // glyph 0: .notdef
-            glyphs.Add(new ExportGlyph
+            var glyphs = new List<ExportGlyph>
             {
-                Name = ".notdef",
-                Unicode = null,
-                Glyph = BuildNotDefGlyph()
-            });
-
-            // glyph 1: space
-            glyphs.Add(new ExportGlyph
-            {
-                Name = "space",
-                Unicode = 32,
-                Glyph = GlyphData.Empty()
-            });
+                new ExportGlyph
+                {
+                    Name = ".notdef",
+                    Unicode = null,
+                    Glyph = BuildNotDefGlyph()
+                },
+                new ExportGlyph
+                {
+                    Name = "space",
+                    Unicode = 32,
+                    Glyph = GlyphData.Empty()
+                }
+            };
 
             if (font.Glyphs != null)
             {
@@ -66,44 +70,65 @@ namespace FontForge.Classes
                     }
                     catch
                     {
-                        result.SkippedGlyphCount++;
-                        result.SkippedChars.Add(glyphEntry.Char);
+                        SkipGlyph(result, glyphEntry.Char);
                         continue;
                     }
 
-                    // Для простого cmap format 4 берём BMP-символы.
-                    // Русские буквы, латиница, цифры, знаки — подходят.
+                    if (unicode == 32)
+                        continue;
+
                     if (unicode > 0xFFFF)
                     {
-                        result.SkippedGlyphCount++;
-                        result.SkippedChars.Add(glyphEntry.Char);
+                        SkipGlyph(result, glyphEntry.Char);
                         continue;
                     }
 
-                    string? pngPath = GlyphImageResolver.FindGlyphImagePath(font, glyphEntry.Char, allowLookAlikeFallback: false);
+                    string? pngPath = GlyphImageResolver.FindGlyphImagePath(
+                        font,
+                        glyphEntry.Char,
+                        allowLookAlikeFallback: false);
 
-                    if (string.IsNullOrWhiteSpace(pngPath))
+                    if (string.IsNullOrWhiteSpace(pngPath) || !File.Exists(pngPath))
                     {
-                        result.SkippedGlyphCount++;
-                        result.SkippedChars.Add(glyphEntry.Char);
+                        SkipGlyph(result, glyphEntry.Char);
                         continue;
                     }
+
+                    GlyphData glyphData = GlyphData.Empty();
+                    bool exportedFromIsf = false;
 
                     string isfPath = Path.ChangeExtension(pngPath, ".isf");
 
-                    if (!File.Exists(isfPath))
+                    if (!string.IsNullOrWhiteSpace(isfPath) && File.Exists(isfPath))
                     {
-                        result.SkippedGlyphCount++;
-                        result.SkippedChars.Add(glyphEntry.Char);
-                        continue;
+                        try
+                        {
+                            glyphData = BuildGlyphFromIsf(isfPath);
+                            exportedFromIsf = !glyphData.IsEmpty;
+                        }
+                        catch
+                        {
+                            glyphData = GlyphData.Empty();
+                            exportedFromIsf = false;
+                        }
                     }
-
-                    GlyphData glyphData = BuildGlyphFromIsf(isfPath);
 
                     if (glyphData.IsEmpty)
                     {
-                        result.SkippedGlyphCount++;
-                        result.SkippedChars.Add(glyphEntry.Char);
+                        try
+                        {
+                            glyphData = BuildGlyphFromPng(pngPath);
+                            exportedFromIsf = false;
+                        }
+                        catch
+                        {
+                            glyphData = GlyphData.Empty();
+                        }
+                    }
+
+                    if (glyphData.IsEmpty)
+                    {
+                        SkipGlyph(result, glyphEntry.Char);
                         continue;
                     }
 
@@ -115,16 +140,29 @@ namespace FontForge.Classes
                     });
 
                     result.ExportedGlyphCount++;
+
+                    if (exportedFromIsf)
+                        result.ExportedFromIsfCount++;
+                    else
+                        result.ExportedFromPngCount++;
                 }
             }
 
             if (result.ExportedGlyphCount == 0)
-                throw new InvalidOperationException("Нет символов для экспорта. Нарисуйте хотя бы один символ и сохраните его.");
+                throw new InvalidOperationException("Нет символов для экспорта. Нарисуйте или загрузите хотя бы один символ.");
 
             byte[] fontBytes = BuildTrueTypeFont(font.Name, glyphs);
             File.WriteAllBytes(outputPath, fontBytes);
 
             return result;
+        }
+
+        private static void SkipGlyph(FontExportResult result, string ch)
+        {
+            result.SkippedGlyphCount++;
+
+            if (!string.IsNullOrWhiteSpace(ch))
+                result.SkippedChars.Add(ch);
         }
 
         private static GlyphData BuildNotDefGlyph()
@@ -258,6 +296,253 @@ namespace FontForge.Classes
             return glyph;
         }
 
+        private static GlyphData BuildGlyphFromPng(string pngPath)
+        {
+            BitmapSource source = LoadBitmapSource(pngPath);
+            BitmapSource formatted = EnsureBgra32(source);
+
+            int width = formatted.PixelWidth;
+            int height = formatted.PixelHeight;
+
+            if (width <= 0 || height <= 0)
+                return GlyphData.Empty();
+
+            int stride = width * 4;
+            byte[] pixels = new byte[stride * height];
+            formatted.CopyPixels(pixels, stride, 0);
+
+            int minX = width;
+            int minY = height;
+            int maxX = -1;
+            int maxY = -1;
+
+            for (int y = 0; y < height; y++)
+            {
+                int row = y * stride;
+
+                for (int x = 0; x < width; x++)
+                {
+                    int index = row + x * 4;
+
+                    byte b = pixels[index + 0];
+                    byte g = pixels[index + 1];
+                    byte r = pixels[index + 2];
+                    byte a = pixels[index + 3];
+
+                    if (!IsInkPixel(r, g, b, a))
+                        continue;
+
+                    if (x < minX) minX = x;
+                    if (y < minY) minY = y;
+                    if (x > maxX) maxX = x;
+                    if (y > maxY) maxY = y;
+                }
+            }
+
+            if (maxX < minX || maxY < minY)
+                return GlyphData.Empty();
+
+            int boxWidth = maxX - minX + 1;
+            int boxHeight = maxY - minY + 1;
+
+            int gridWidth;
+            int gridHeight;
+
+            if (boxWidth >= boxHeight)
+            {
+                gridWidth = Math.Min(PngMaxGridSize, Math.Max(1, boxWidth));
+                gridHeight = Math.Max(1, (int)Math.Round(gridWidth * (boxHeight / (double)boxWidth)));
+            }
+            else
+            {
+                gridHeight = Math.Min(PngMaxGridSize, Math.Max(1, boxHeight));
+                gridWidth = Math.Max(1, (int)Math.Round(gridHeight * (boxWidth / (double)boxHeight)));
+            }
+
+            bool[,] mask = new bool[gridWidth, gridHeight];
+
+            for (int y = minY; y <= maxY; y++)
+            {
+                int row = y * stride;
+
+                for (int x = minX; x <= maxX; x++)
+                {
+                    int index = row + x * 4;
+
+                    byte b = pixels[index + 0];
+                    byte g = pixels[index + 1];
+                    byte r = pixels[index + 2];
+                    byte a = pixels[index + 3];
+
+                    if (!IsInkPixel(r, g, b, a))
+                        continue;
+
+                    int gx = (int)((x - minX) * (gridWidth / (double)boxWidth));
+                    int gy = (int)((y - minY) * (gridHeight / (double)boxHeight));
+
+                    gx = Math.Clamp(gx, 0, gridWidth - 1);
+                    gy = Math.Clamp(gy, 0, gridHeight - 1);
+
+                    mask[gx, gy] = true;
+                }
+            }
+
+            mask = DilateMask(mask, gridWidth, gridHeight);
+
+            return BuildGlyphFromMask(mask, gridWidth, gridHeight);
+        }
+
+        private static bool IsInkPixel(byte r, byte g, byte b, byte a)
+        {
+            if (a < 20)
+                return false;
+
+            int brightness = (r + g + b) / 3;
+            int max = Math.Max(r, Math.Max(g, b));
+            int min = Math.Min(r, Math.Min(g, b));
+            int saturation = max - min;
+
+            if (a > 80 && brightness < 245)
+                return true;
+
+            if (saturation > 35 && brightness < 235)
+                return true;
+
+            return false;
+        }
+
+        private static bool[,] DilateMask(bool[,] source, int width, int height)
+        {
+            bool[,] result = new bool[width, height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (!source[x, y])
+                        continue;
+
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            int nx = x + dx;
+                            int ny = y + dy;
+
+                            if (nx < 0 || ny < 0 || nx >= width || ny >= height)
+                                continue;
+
+                            result[nx, ny] = true;
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static GlyphData BuildGlyphFromMask(bool[,] mask, int width, int height)
+        {
+            var glyph = new GlyphData();
+
+            double targetWidth = 760;
+            double targetHeight = 760;
+
+            double scale = Math.Min(targetWidth / Math.Max(1, width), targetHeight / Math.Max(1, height));
+
+            double scaledWidth = width * scale;
+            double scaledHeight = height * scale;
+
+            double offsetX = (UnitsPerEm - scaledWidth) / 2.0;
+            double offsetY = 80 + scaledHeight;
+
+            for (int y = 0; y < height; y++)
+            {
+                int x = 0;
+
+                while (x < width)
+                {
+                    while (x < width && !mask[x, y])
+                        x++;
+
+                    if (x >= width)
+                        break;
+
+                    int start = x;
+
+                    while (x < width && mask[x, y])
+                        x++;
+
+                    int end = x - 1;
+
+                    double left = offsetX + start * scale;
+                    double right = offsetX + (end + 1) * scale;
+                    double top = offsetY - y * scale;
+                    double bottom = offsetY - (y + 1) * scale;
+
+                    List<IntPoint> contour = BuildRectangleContour(left, bottom, right, top);
+
+                    if (contour.Count >= 3)
+                        glyph.Contours.Add(contour);
+                }
+            }
+
+            glyph.RecalculateBounds();
+            return glyph;
+        }
+
+        private static List<IntPoint> BuildRectangleContour(double left, double bottom, double right, double top)
+        {
+            short x0 = ToFontUnit(left);
+            short x1 = ToFontUnit(right);
+            short y0 = ToFontUnit(bottom);
+            short y1 = ToFontUnit(top);
+
+            if (x0 == x1)
+                x1 = ToFontUnit(x1 + 1);
+
+            if (y0 == y1)
+                y1 = ToFontUnit(y1 + 1);
+
+            return new List<IntPoint>
+            {
+                new IntPoint(x0, y0),
+                new IntPoint(x1, y0),
+                new IntPoint(x1, y1),
+                new IntPoint(x0, y1)
+            };
+        }
+
+        private static BitmapSource LoadBitmapSource(string path)
+        {
+            var bmp = new BitmapImage();
+
+            bmp.BeginInit();
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+            bmp.UriSource = new Uri(path, UriKind.Absolute);
+            bmp.EndInit();
+            bmp.Freeze();
+
+            return bmp;
+        }
+
+        private static BitmapSource EnsureBgra32(BitmapSource source)
+        {
+            if (source.Format == PixelFormats.Bgra32)
+                return source;
+
+            FormatConvertedBitmap converted = new FormatConvertedBitmap();
+
+            converted.BeginInit();
+            converted.Source = source;
+            converted.DestinationFormat = PixelFormats.Bgra32;
+            converted.EndInit();
+            converted.Freeze();
+
+            return converted;
+        }
+
         private static List<Point> SimplifyStrokePoints(Stroke stroke)
         {
             var result = new List<Point>();
@@ -292,7 +577,6 @@ namespace FontForge.Classes
                 result.Add(new Point(lastPoint.X, lastPoint.Y));
             }
 
-            // Ограничиваем количество точек, чтобы шрифт не был слишком тяжёлым.
             const int maxPoints = 180;
 
             if (result.Count > maxPoints)
@@ -371,7 +655,6 @@ namespace FontForge.Classes
         {
             var cmapMap = new Dictionary<int, ushort>();
 
-            // space
             cmapMap[32] = 1;
 
             for (ushort i = 0; i < glyphs.Count; i++)
@@ -466,16 +749,15 @@ namespace FontForge.Classes
                 w.WriteUInt16((ushort)(pointIndex - 1));
             }
 
-            // instructionLength = 0
             w.WriteUInt16(0);
 
             List<IntPoint> points = glyph.Contours.SelectMany(c => c).ToList();
 
-            // flags: все точки on-curve, координаты пишем 16-bit deltas
             foreach (IntPoint _ in points)
                 w.WriteByte(0x01);
 
             short prevX = 0;
+
             foreach (IntPoint point in points)
             {
                 short dx = (short)(point.X - prevX);
@@ -484,6 +766,7 @@ namespace FontForge.Classes
             }
 
             short prevY = 0;
+
             foreach (IntPoint point in points)
             {
                 short dy = (short)(point.Y - prevY);
@@ -516,8 +799,8 @@ namespace FontForge.Classes
             using var ms = new MemoryStream();
             var w = new BeWriter(ms);
 
-            foreach (uint offset in offsets)
-                w.WriteUInt32(offset);
+            foreach (uint value in offsets)
+                w.WriteUInt32(value);
 
             return ms.ToArray();
         }
@@ -531,7 +814,7 @@ namespace FontForge.Classes
 
             w.WriteUInt32(0x00010000);
             w.WriteUInt32(0x00010000);
-            w.WriteUInt32(0); // checkSumAdjustment, заполняется позже
+            w.WriteUInt32(0);
             w.WriteUInt32(0x5F0F3CF5);
             w.WriteUInt16(0x000B);
             w.WriteUInt16(UnitsPerEm);
@@ -544,7 +827,7 @@ namespace FontForge.Classes
             w.WriteUInt16(0);
             w.WriteUInt16(8);
             w.WriteInt16(2);
-            w.WriteInt16(1); // indexToLocFormat = long
+            w.WriteInt16(1);
             w.WriteInt16(0);
 
             return ms.ToArray();
@@ -585,17 +868,17 @@ namespace FontForge.Classes
             w.WriteUInt16((ushort)glyphCount);
             w.WriteUInt16((ushort)Math.Clamp(maxPoints, 0, ushort.MaxValue));
             w.WriteUInt16((ushort)Math.Clamp(maxContours, 0, ushort.MaxValue));
-            w.WriteUInt16(0); // maxCompositePoints
-            w.WriteUInt16(0); // maxCompositeContours
-            w.WriteUInt16(2); // maxZones
-            w.WriteUInt16(0); // maxTwilightPoints
-            w.WriteUInt16(0); // maxStorage
-            w.WriteUInt16(0); // maxFunctionDefs
-            w.WriteUInt16(0); // maxInstructionDefs
-            w.WriteUInt16(0); // maxStackElements
-            w.WriteUInt16(0); // maxSizeOfInstructions
-            w.WriteUInt16(0); // maxComponentElements
-            w.WriteUInt16(0); // maxComponentDepth
+            w.WriteUInt16(0);
+            w.WriteUInt16(0);
+            w.WriteUInt16(2);
+            w.WriteUInt16(0);
+            w.WriteUInt16(0);
+            w.WriteUInt16(0);
+            w.WriteUInt16(0);
+            w.WriteUInt16(0);
+            w.WriteUInt16(0);
+            w.WriteUInt16(0);
+            w.WriteUInt16(0);
 
             return ms.ToArray();
         }
@@ -669,7 +952,7 @@ namespace FontForge.Classes
                 sw.WriteInt16(delta);
             }
 
-            sw.WriteInt16(1); // 0xFFFF -> glyph 0
+            sw.WriteInt16(1);
 
             for (int i = 0; i < segCount; i++)
                 sw.WriteUInt16(0);
@@ -752,10 +1035,7 @@ namespace FontForge.Classes
                     sb.Append(ch);
             }
 
-            if (sb.Length == 0)
-                return "MyHandwritingFont-Regular";
-
-            return sb.ToString();
+            return sb.Length == 0 ? "MyHandwritingFont-Regular" : sb.ToString();
         }
 
         private static byte[] BuildOS2Table(Dictionary<int, ushort> cmap)
@@ -766,11 +1046,11 @@ namespace FontForge.Classes
             using var ms = new MemoryStream();
             var w = new BeWriter(ms);
 
-            w.WriteUInt16(0); // version
-            w.WriteInt16(500); // xAvgCharWidth
-            w.WriteUInt16(400); // usWeightClass
-            w.WriteUInt16(5); // usWidthClass
-            w.WriteUInt16(0); // fsType
+            w.WriteUInt16(0);
+            w.WriteInt16(500);
+            w.WriteUInt16(400);
+            w.WriteUInt16(5);
+            w.WriteUInt16(0);
 
             w.WriteInt16(650);
             w.WriteInt16(699);
@@ -789,14 +1069,13 @@ namespace FontForge.Classes
             for (int i = 0; i < 10; i++)
                 w.WriteByte(0);
 
-            // Basic Latin + Cyrillic
             w.WriteUInt32((uint)((1 << 0) | (1 << 9)));
             w.WriteUInt32(0);
             w.WriteUInt32(0);
             w.WriteUInt32(0);
 
             w.WriteAscii("FFRG");
-            w.WriteUInt16(0x0040); // regular
+            w.WriteUInt16(0x0040);
             w.WriteUInt16((ushort)first);
             w.WriteUInt16((ushort)last);
             w.WriteInt16(Ascender);
