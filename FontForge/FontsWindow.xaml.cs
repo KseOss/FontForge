@@ -47,17 +47,35 @@ namespace FontForge
             ActiveFonts.Clear();
             TrashFonts.Clear();
 
-            foreach (var font in _allFonts.Where(x => !x.IsDeleted).OrderByDescending(x => x.CreatedAt))
+            foreach (CreatedFont font in _allFonts
+                         .Where(x => !x.IsDeleted)
+                         .OrderByDescending(x => x.CreatedAt))
+            {
                 ActiveFonts.Add(font);
+            }
 
-            foreach (var font in _allFonts.Where(x => x.IsDeleted).OrderByDescending(x => x.DeletedAt ?? DateTime.MinValue))
+            foreach (CreatedFont font in _allFonts
+                         .Where(x => x.IsDeleted)
+                         .OrderByDescending(x => x.DeletedAt ?? DateTime.MinValue))
+            {
                 TrashFonts.Add(font);
+            }
 
-            EmptyActivePanel.Visibility = ActiveFonts.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            ActiveListPanel.Visibility = ActiveFonts.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            EmptyActivePanel.Visibility = ActiveFonts.Count == 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
 
-            EmptyTrashPanel.Visibility = TrashFonts.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            TrashListPanel.Visibility = TrashFonts.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            ActiveListPanel.Visibility = ActiveFonts.Count == 0
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+            EmptyTrashPanel.Visibility = TrashFonts.Count == 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+            TrashListPanel.Visibility = TrashFonts.Count == 0
+                ? Visibility.Collapsed
+                : Visibility.Visible;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -76,10 +94,29 @@ namespace FontForge
                 });
         }
 
-        private void Window_Closed(object? sender, EventArgs e)
+        private void BackToMain_Click(object sender, RoutedEventArgs e)
         {
-            // Ничего не делаем.
-            // Главное окно само вернётся через событие Closed в MainWindow.
+            MainWindow? mainWindow = Application.Current.Windows
+                .OfType<MainWindow>()
+                .FirstOrDefault();
+
+            if (mainWindow == null)
+            {
+                mainWindow = new MainWindow
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
+
+                mainWindow.Show();
+            }
+            else
+            {
+                mainWindow.Show();
+                mainWindow.WindowState = WindowState.Normal;
+                mainWindow.Activate();
+            }
+
+            Close();
         }
 
         private void OpenSettings_Click(object sender, RoutedEventArgs e)
@@ -114,7 +151,9 @@ namespace FontForge
                 return;
             }
 
-            if (_allFonts.Any(f => !f.IsDeleted && string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)))
+            if (_allFonts.Any(f =>
+                    !f.IsDeleted &&
+                    string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)))
             {
                 AppDialog.Warning(this, "Шрифт с таким названием уже существует.");
                 return;
@@ -153,7 +192,7 @@ namespace FontForge
             if (font == null)
                 return;
 
-            var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
+            CreatedFont? found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
 
             if (found == null)
                 return;
@@ -181,7 +220,7 @@ namespace FontForge
             if (sender is not Button button || button.DataContext is not CreatedFont font)
                 return;
 
-            var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
+            CreatedFont? found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
 
             if (found == null)
                 return;
@@ -234,7 +273,7 @@ namespace FontForge
             if (sender is not Button button || button.DataContext is not CreatedFont font)
                 return;
 
-            var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
+            CreatedFont? found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
 
             if (found == null)
                 return;
@@ -262,7 +301,7 @@ namespace FontForge
             if (sender is not Button button || button.DataContext is not CreatedFont font)
                 return;
 
-            var found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
+            CreatedFont? found = _allFonts.FirstOrDefault(x => x.Id == font.Id);
 
             if (found == null)
                 return;

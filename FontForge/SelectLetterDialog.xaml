@@ -231,11 +231,11 @@
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
 
                     <Button Grid.Column="1"
-                            Content="Отмена"
+                            Content="← Назад"
                             Style="{StaticResource DialogSecondaryButton}"
                             Width="140"
                             Margin="0,0,12,0"
-                            Click="Cancel_Click"/>
+                            Click="Cancel_Click" Cursor="Hand"/>
 
                     <Button Grid.Column="2"
                             Content="Выбрать"

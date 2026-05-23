@@ -428,10 +428,10 @@
                             Style="{StaticResource PrimaryButton}"
                             Click="Save_Click"/>
 
-                    <Button Content="Отмена"
-                            Margin="0,10,0,0"
-                            Style="{StaticResource SecondaryButton}"
-                            Click="Cancel_Click"/>
+                    <Button Content="← Назад"
+                        Margin="0,10,0,0"
+                        Style="{StaticResource SecondaryButton}"
+                        Click="Cancel_Click"/>
                 </StackPanel>
             </Grid>
         </Border>

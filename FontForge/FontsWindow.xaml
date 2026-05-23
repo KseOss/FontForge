@@ -19,11 +19,11 @@
             <Setter Property="Padding" Value="20,0"/>
         </Style>
 
-        <Style x:Key="HeaderSettingsButton" TargetType="Button" BasedOn="{StaticResource AppSecondaryButton}">
-            <Setter Property="Width" Value="150"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Padding" Value="14,0"/>
+        <Style x:Key="HeaderButton" TargetType="Button" BasedOn="{StaticResource AppSecondaryButton}">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Padding" Value="16,0"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="MinWidth" Value="118"/>
         </Style>
 
         <Style x:Key="IconButton" TargetType="Button">
@@ -71,7 +71,6 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
-        <!-- Контрастная иконка пустого состояния -->
         <Style x:Key="EmptyStateIconBox" TargetType="Border">
             <Setter Property="Width" Value="78"/>
             <Setter Property="Height" Value="78"/>
@@ -82,7 +81,6 @@
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
 
-        <!-- Вкладки -->
         <Style x:Key="PillTabControlStyle" TargetType="{x:Type TabControl}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -163,36 +161,47 @@
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
+        <!-- Верхняя строка навигации -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel>
-                <TextBlock Text="Мои шрифты"
-                           FontSize="26"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextBrush}"/>
+            <Button Grid.Column="0"
+                    Content="← Назад"
+                    Style="{StaticResource HeaderButton}"
+                    HorizontalAlignment="Left"
+                    Click="BackToMain_Click"/>
 
-                <TextBlock Text="Управление созданными шрифтами и корзиной"
-                           Margin="0,6,0,0"
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-            </StackPanel>
-
-            <Button Grid.Column="1"
+            <Button Grid.Column="2"
                     Content="⚙ Настройки"
-                    Style="{StaticResource HeaderSettingsButton}"
-                    VerticalAlignment="Top"
+                    Style="{StaticResource HeaderButton}"
+                    HorizontalAlignment="Right"
                     Click="OpenSettings_Click"/>
         </Grid>
 
-        <!-- Content -->
-        <Grid Grid.Row="1"
+        <!-- Заголовок -->
+        <StackPanel Grid.Row="1"
+                    Margin="0,18,0,0">
+
+            <TextBlock Text="Мои шрифты"
+                       FontSize="28"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextBrush}"/>
+
+            <TextBlock Text="Управление созданными шрифтами и корзиной"
+                       Margin="0,6,0,0"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+        </StackPanel>
+
+        <!-- Контент -->
+        <Grid Grid.Row="2"
               Margin="0,22,0,0">
 
             <TabControl Style="{StaticResource PillTabControlStyle}"
@@ -202,13 +211,14 @@
                 <TabItem Header="Созданные шрифты">
                     <Grid>
 
-                        <!-- Empty -->
+                        <!-- Пустое состояние -->
                         <Grid x:Name="EmptyActivePanel"
                               Visibility="Collapsed">
 
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Width="520">
+                                        Width="520"
+                                        Margin="0,-30,0,0">
 
                                 <Border Style="{StaticResource EmptyStateIconBox}">
                                     <TextBlock Text="A"
@@ -240,7 +250,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- List -->
+                        <!-- Список шрифтов -->
                         <Grid x:Name="ActiveListPanel"
                               Visibility="Collapsed">
 
@@ -329,13 +339,14 @@
                 <TabItem Header="Корзина">
                     <Grid>
 
-                        <!-- Empty -->
+                        <!-- Пустая корзина -->
                         <Grid x:Name="EmptyTrashPanel"
                               Visibility="Collapsed">
 
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Width="520">
+                                        Width="520"
+                                        Margin="0,-30,0,0">
 
                                 <Border Style="{StaticResource EmptyStateIconBox}">
                                     <TextBlock Text="&#xE74D;"
@@ -360,7 +371,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- List -->
+                        <!-- Список корзины -->
                         <Grid x:Name="TrashListPanel"
                               Visibility="Collapsed">
 
@@ -417,7 +428,7 @@
         </Grid>
 
         <Rectangle x:Name="FadeOverlay"
-                   Grid.RowSpan="2"
+                   Grid.RowSpan="3"
                    Fill="{DynamicResource BackgroundBrush}"
                    Opacity="0"
                    IsHitTestVisible="False"/>

@@ -137,10 +137,10 @@
                     </Grid.ColumnDefinitions>
 
                     <Button Grid.Column="1"
-                            Content="Отмена"
-                            Style="{StaticResource DialogSecondaryButton}"
-                            Margin="0,0,10,0"
-                            Click="Cancel_Click"/>
+                        Content="← Назад"
+                        Style="{StaticResource DialogSecondaryButton}"
+                        Margin="0,0,10,0"
+                        Click="Cancel_Click"/>
 
                     <Button x:Name="OkButton"
                             Grid.Column="2"
