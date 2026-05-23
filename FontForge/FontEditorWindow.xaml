@@ -9,88 +9,13 @@
         Background="{DynamicResource BackgroundBrush}"
         Icon="/Images/Logo.png"
         Loaded="Window_Loaded"
-        Closed="Window_Closed">
+        Closed="Window_Closed"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
 
     <Window.Resources>
 
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-
-        <Style x:Key="ThemeToggleSwitchStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="70"/>
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
-                            <Border x:Name="Track"
-                                    CornerRadius="17"
-                                    Background="#D6D6D6"
-                                    BorderBrush="#B8B8B8"
-                                    BorderThickness="1"/>
-
-                            <Border x:Name="Thumb"
-                                    Width="30"
-                                    Height="30"
-                                    CornerRadius="15"
-                                    Background="White"
-                                    HorizontalAlignment="Left"
-                                    Margin="2">
-                                <Border.RenderTransform>
-                                    <TranslateTransform x:Name="ThumbTransform" X="0"/>
-                                </Border.RenderTransform>
-
-                                <TextBlock x:Name="IconText"
-                                           Text="🌙"
-                                           FontSize="16"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"/>
-                            </Border>
-                        </Grid>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter TargetName="IconText" Property="Text" Value="🔆"/>
-
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
-                                                             Storyboard.TargetProperty="X"
-                                                             To="36"
-                                                             Duration="0:0:0.18"
-                                                             AccelerationRatio="0.2"
-                                                             DecelerationRatio="0.8"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
-                                                             Storyboard.TargetProperty="X"
-                                                             To="0"
-                                                             Duration="0:0:0.18"
-                                                             AccelerationRatio="0.2"
-                                                             DecelerationRatio="0.8"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
-                            </Trigger>
-
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Thumb" Property="Background" Value="#F3F3F3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
 
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
@@ -266,28 +191,101 @@
             </Setter>
         </Style>
 
-        <Style x:Key="GlyphTile" TargetType="Button">
-            <Setter Property="Width" Value="110"/>
-            <Setter Property="Height" Value="120"/>
-            <Setter Property="Margin" Value="0,0,10,10"/>
+        <!-- Красивый ScrollBar для блока с буквами -->
+        <Style x:Key="GlyphScrollThumb" TargetType="Thumb">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Opacity" Value="0.55"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="Root"
+                                CornerRadius="8"
+                                Background="{TemplateBinding Background}"
+                                Opacity="{TemplateBinding Opacity}"/>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GlyphScrollBar" TargetType="ScrollBar">
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Border CornerRadius="9"
+                                Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track"
+                                   IsDirectionReversed="True"
+                                   Margin="4">
+
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand"
+                                                  Opacity="0"
+                                                  IsTabStop="False"/>
+                                </Track.DecreaseRepeatButton>
+
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource GlyphScrollThumb}"/>
+                                </Track.Thumb>
+
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand"
+                                                  Opacity="0"
+                                                  IsTabStop="False"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Карточка символа -->
+        <Style x:Key="GlyphTileCard" TargetType="Border">
+            <Setter Property="Width" Value="118"/>
+            <Setter Property="Height" Value="126"/>
+            <Setter Property="Margin" Value="0,0,12,12"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="CornerRadius" Value="16"/>
             <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style x:Key="GlyphDeleteButton" TargetType="Button">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Root"
                                 CornerRadius="14"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}">
-                            <ContentPresenter Margin="10"/>
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.88"/>
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource DangerBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource DangerTextBrush}"/>
                             </Trigger>
 
                             <Trigger Property="IsPressed" Value="True">
@@ -309,6 +307,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Заголовок -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -326,13 +325,13 @@
                            FontSize="13"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
             </StackPanel>
-
-            
         </Grid>
 
+        <!-- Предпросмотр -->
         <Border Grid.Row="1"
                 Margin="0,18,0,0"
                 Style="{StaticResource Card}">
+
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -377,7 +376,8 @@
                                  VerticalContentAlignment="Center"
                                  Background="{DynamicResource InputBackgroundBrush}"
                                  Foreground="{DynamicResource TextBrush}"
-                                 CaretBrush="{DynamicResource TextBrush}"
+                                 CaretBrush="{DynamicResource AccentBrush}"
+                                 SelectionBrush="{DynamicResource AccentBrush}"
                                  BorderBrush="{DynamicResource MutedBorderBrush}"
                                  BorderThickness="1"
                                  Padding="12,0"
@@ -399,6 +399,7 @@
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
                         Padding="12">
+
                     <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                   VerticalScrollBarVisibility="Disabled">
                         <WrapPanel x:Name="PreviewRenderPanel"
@@ -408,9 +409,11 @@
             </Grid>
         </Border>
 
+        <!-- Символы шрифта -->
         <Border Grid.Row="2"
                 Margin="0,18,0,0"
                 Style="{StaticResource Card}">
+
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -436,7 +439,14 @@
 
                 <ScrollViewer Grid.Row="1"
                               Margin="0,12,0,0"
-                              VerticalScrollBarVisibility="Auto">
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="0,0,8,0">
+
+                    <ScrollViewer.Resources>
+                        <Style TargetType="ScrollBar" BasedOn="{StaticResource GlyphScrollBar}"/>
+                    </ScrollViewer.Resources>
+
                     <ItemsControl ItemsSource="{Binding Glyphs}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -446,18 +456,49 @@
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Style="{StaticResource GlyphTile}"
-                                        Click="GlyphTile_Click">
+                                <Border Style="{StaticResource GlyphTileCard}"
+                                        MouseLeftButtonUp="GlyphCard_MouseLeftButtonUp">
+
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
 
-                                        <TextBlock Text="{Binding Char}"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource TextBrush}"/>
+                                        <Grid Grid.Row="0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="{Binding Char}"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextBrush}"
+                                                       VerticalAlignment="Center"/>
+
+                                            <TextBlock Grid.Column="2"
+                                                       Text="•"
+                                                       FontSize="24"
+                                                       FontWeight="Black"
+                                                       Foreground="Red"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,4,0"
+                                                       Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                            <Button Grid.Column="3"
+                                                    Style="{StaticResource GlyphDeleteButton}"
+                                                    ToolTip="Удалить символ"
+                                                    Click="DeleteGlyph_Click">
+                                                <TextBlock Text="&#xE74D;"
+                                                           FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="14"
+                                                           VerticalAlignment="Center"
+                                                           HorizontalAlignment="Center"/>
+                                            </Button>
+                                        </Grid>
 
                                         <Border Grid.Row="1"
                                                 Margin="0,8,0,0"
@@ -465,22 +506,14 @@
                                                 Background="#F3F4EF"
                                                 BorderBrush="#1A000000"
                                                 BorderThickness="1">
+
                                             <Image Source="{Binding DefaultImagePath}"
                                                    Stretch="Uniform"
                                                    Margin="6"
                                                    RenderOptions.BitmapScalingMode="HighQuality"/>
                                         </Border>
-
-                                        <TextBlock Text="•"
-                                                   FontSize="22"
-                                                   FontWeight="Black"
-                                                   Foreground="Red"
-                                                   VerticalAlignment="Top"
-                                                   HorizontalAlignment="Right"
-                                                   Margin="0,10,8,0"
-                                                   Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                     </Grid>
-                                </Button>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -488,8 +521,10 @@
             </Grid>
         </Border>
 
+        <!-- Нижние кнопки -->
         <Grid Grid.Row="3"
               Margin="0,18,0,0">
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
