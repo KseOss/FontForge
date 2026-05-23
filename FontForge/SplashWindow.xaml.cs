@@ -10,9 +10,18 @@ namespace FontForge
     {
         private const double ProgressBarMaxWidth = 270;
 
+        private readonly bool _fullLoading;
+
         public SplashWindow()
+            : this(true)
+        {
+        }
+
+        public SplashWindow(bool fullLoading)
         {
             InitializeComponent();
+
+            _fullLoading = fullLoading;
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -21,6 +30,20 @@ namespace FontForge
             StartSoftGlowAnimation();
             PlayIntroAnimation();
 
+            if (_fullLoading)
+                await RunFullLoadingAsync();
+            else
+                await RunQuickLoadingAsync();
+
+            App.MarkFirstLaunchCompleted();
+
+            await Task.Delay(300);
+
+            PlayOutroAnimation();
+        }
+
+        private async Task RunFullLoadingAsync()
+        {
             await SetLoadingStep(
                 "Сбор данных приложения...",
                 "Проверка структуры проекта и локальных ресурсов",
@@ -71,13 +94,36 @@ namespace FontForge
 
             await SetLoadingStep(
                 "Финальная сборка рабочего пространства...",
-                "Открываем главное окно программы",
+                "Открываем программу",
                 100,
                 1300);
+        }
 
-            await Task.Delay(500);
+        private async Task RunQuickLoadingAsync()
+        {
+            await SetLoadingStep(
+                "Быстрый запуск...",
+                "Загружаем сохранённые настройки оформления",
+                20,
+                1000);
 
-            PlayOutroAnimation();
+            await SetLoadingStep(
+                "Проверка шрифтов...",
+                "Подготовка списка созданных шрифтов",
+                45,
+                1200);
+
+            await SetLoadingStep(
+                "Подготовка интерфейса...",
+                "Открываем рабочее окно",
+                70,
+                1200);
+
+            await SetLoadingStep(
+                "Готово",
+                "Переход к вашим шрифтам",
+                100,
+                1600);
         }
 
         private async Task SetLoadingStep(string title, string detail, int percent, int delayMilliseconds)
@@ -102,12 +148,12 @@ namespace FontForge
 
             Color glowOne = Mix(
                 accent,
-                dark ? ColorFromHex("#FFFFFF") : ColorFromHex("#FFFFFF"),
+                ColorFromHex("#FFFFFF"),
                 dark ? 0.18 : 0.45);
 
             Color glowTwo = Mix(
                 accent,
-                dark ? ColorFromHex("#FFFFFF") : ColorFromHex("#FFFFFF"),
+                ColorFromHex("#FFFFFF"),
                 dark ? 0.10 : 0.30);
 
             GlowOneColor.Color = Color.FromArgb(255, glowOne.R, glowOne.G, glowOne.B);
@@ -291,11 +337,20 @@ namespace FontForge
             {
                 Window nextWindow;
 
-                if (App.CurrentThemeSettings.StartWindow == "FontsWindow")
+                if (!_fullLoading)
+                {
                     nextWindow = new FontsWindow();
-                else
+                }
+                else if (App.CurrentThemeSettings.StartWindow == "MainWindow")
+                {
                     nextWindow = new MainWindow();
+                }
+                else
+                {
+                    nextWindow = new FontsWindow();
+                }
 
+                nextWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 nextWindow.Show();
 
                 Close();

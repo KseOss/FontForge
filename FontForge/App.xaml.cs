@@ -23,8 +23,18 @@ namespace FontForge
 
             ApplyCurrentTheme();
 
-            var splash = new SplashWindow();
+            bool needFullSplash =
+                !CurrentThemeSettings.HasCompletedFirstLaunch ||
+                CurrentThemeSettings.ShowFullSplashEveryStart;
+
+            var splash = new SplashWindow(needFullSplash);
             splash.Show();
+        }
+
+        public static void MarkFirstLaunchCompleted()
+        {
+            CurrentThemeSettings.HasCompletedFirstLaunch = true;
+            SaveThemeSettings(CurrentThemeSettings);
         }
 
         public static void SetTheme(bool dark)
@@ -103,7 +113,7 @@ namespace FontForge
             SetBrush("CardBrush", Mix(baseCard, palette.Accent, CurrentThemeSettings.BackgroundStyle == "Plain" ? 0.00 : 0.04));
             SetBrush("InputBackgroundBrush", baseInput);
 
-            SetBrush("PreviewBackgroundBrush", ColorFromHex("#FFFFFF"));
+            SetBrush("PreviewBackgroundBrush", ColorFromHex("#F3F4EF"));
             SetBrush("PreviewTextBrush", ColorFromHex("#101114"));
 
             SetBrush("TextBrush", dark ? ColorFromHex("#F4F6FA") : ColorFromHex("#101114"));
@@ -269,6 +279,7 @@ namespace FontForge
             try
             {
                 string path = GetSettingsPath();
+
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions
                 {
                     WriteIndented = true
@@ -278,7 +289,7 @@ namespace FontForge
             }
             catch
             {
-                // Если настройки не сохранились, приложение всё равно должно работать.
+                // Настройки не критичны. Если не сохранились, приложение всё равно работает.
             }
         }
     }
@@ -293,16 +304,15 @@ namespace FontForge
 
         public string ButtonStyle { get; set; } = "Auto";
 
-        // Что открывать после загрузки приложения:
-        // MainWindow или FontsWindow
-        public string StartWindow { get; set; } = "MainWindow";
+        public string StartWindow { get; set; } = "FontsWindow";
 
-        // Что делать после создания нового шрифта:
-        // OpenEditor или StayInList
         public string AfterCreateFont { get; set; } = "OpenEditor";
 
-        // Подтверждать перемещение в корзину
         public bool ConfirmMoveToTrash { get; set; } = true;
+
+        public bool HasCompletedFirstLaunch { get; set; } = false;
+
+        public bool ShowFullSplashEveryStart { get; set; } = false;
 
         public AppThemeSettings Clone()
         {
@@ -314,7 +324,9 @@ namespace FontForge
                 ButtonStyle = ButtonStyle,
                 StartWindow = StartWindow,
                 AfterCreateFont = AfterCreateFont,
-                ConfirmMoveToTrash = ConfirmMoveToTrash
+                ConfirmMoveToTrash = ConfirmMoveToTrash,
+                HasCompletedFirstLaunch = HasCompletedFirstLaunch,
+                ShowFullSplashEveryStart = ShowFullSplashEveryStart
             };
         }
 
@@ -350,7 +362,7 @@ namespace FontForge
             if (StartWindow != "MainWindow" &&
                 StartWindow != "FontsWindow")
             {
-                StartWindow = "MainWindow";
+                StartWindow = "FontsWindow";
             }
 
             if (AfterCreateFont != "OpenEditor" &&

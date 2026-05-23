@@ -339,7 +339,24 @@
                                     <ComboBoxItem Content="Спрашивать перед корзиной" Tag="True"/>
                                     <ComboBoxItem Content="Перемещать сразу" Tag="False"/>
                                 </ComboBox>
+                                <TextBlock Text="Загрузочный экран"
+                                    Margin="0,22,0,0"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextBrush}"/>
 
+                                <TextBlock Text="Можно показывать полную загрузку только при первом запуске, чтобы не раздражать пользователя."
+                                    Margin="0,4,0,8"
+                                    FontSize="12"
+                                    TextWrapping="Wrap"
+                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                                <ComboBox x:Name="SplashModeCombo"
+                                    Style="{StaticResource AppComboBox}"
+                                    SelectionChanged="Settings_Changed">
+                                    <ComboBoxItem Content="Полная загрузка только при первом запуске" Tag="FirstLaunchOnly"/>
+                                    <ComboBoxItem Content="Полная загрузка при каждом запуске" Tag="AlwaysFull"/>
+                                </ComboBox>
                                 <Border Margin="0,26,0,0"
                                         CornerRadius="16"
                                         Background="{DynamicResource SurfaceBrush}"

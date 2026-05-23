@@ -32,6 +32,7 @@ namespace FontForge
             SelectComboByTag(StartWindowCombo, settings.StartWindow);
             SelectComboByTag(AfterCreateFontCombo, settings.AfterCreateFont);
             SelectComboByTag(ConfirmMoveToTrashCombo, settings.ConfirmMoveToTrash ? "True" : "False");
+            SelectComboByTag(SplashModeCombo, settings.ShowFullSplashEveryStart ? "AlwaysFull" : "FirstLaunchOnly");
         }
 
         private void Settings_Changed(object sender, SelectionChangedEventArgs e)
@@ -44,6 +45,8 @@ namespace FontForge
 
         private void ApplySettingsFromControls()
         {
+            AppThemeSettings oldSettings = App.CurrentThemeSettings.Clone();
+
             var settings = new AppThemeSettings
             {
                 ThemeMode = GetSelectedTag(ThemeModeCombo, "Light"),
@@ -51,9 +54,13 @@ namespace FontForge
                 BackgroundStyle = GetSelectedTag(BackgroundCombo, "Plain"),
                 ButtonStyle = GetSelectedTag(ButtonStyleCombo, "Auto"),
 
-                StartWindow = GetSelectedTag(StartWindowCombo, "MainWindow"),
+                StartWindow = GetSelectedTag(StartWindowCombo, "FontsWindow"),
                 AfterCreateFont = GetSelectedTag(AfterCreateFontCombo, "OpenEditor"),
-                ConfirmMoveToTrash = GetSelectedTag(ConfirmMoveToTrashCombo, "True") == "True"
+                ConfirmMoveToTrash = GetSelectedTag(ConfirmMoveToTrashCombo, "True") == "True",
+
+                ShowFullSplashEveryStart = GetSelectedTag(SplashModeCombo, "FirstLaunchOnly") == "AlwaysFull",
+
+                HasCompletedFirstLaunch = oldSettings.HasCompletedFirstLaunch
             };
 
             settings.Normalize();
@@ -65,7 +72,11 @@ namespace FontForge
         {
             _isLoading = true;
 
-            var settings = new AppThemeSettings();
+            var oldSettings = App.CurrentThemeSettings.Clone();
+            var settings = new AppThemeSettings
+            {
+                HasCompletedFirstLaunch = oldSettings.HasCompletedFirstLaunch
+            };
 
             SelectComboByTag(ThemeModeCombo, settings.ThemeMode);
             SelectComboByTag(AccentCombo, settings.AccentName);
@@ -75,6 +86,7 @@ namespace FontForge
             SelectComboByTag(StartWindowCombo, settings.StartWindow);
             SelectComboByTag(AfterCreateFontCombo, settings.AfterCreateFont);
             SelectComboByTag(ConfirmMoveToTrashCombo, settings.ConfirmMoveToTrash ? "True" : "False");
+            SelectComboByTag(SplashModeCombo, settings.ShowFullSplashEveryStart ? "AlwaysFull" : "FirstLaunchOnly");
 
             _isLoading = false;
 
