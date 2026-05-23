@@ -206,13 +206,24 @@ namespace FontForge
             var editor = new FontEditorWindow(found.Id)
             {
                 Owner = this,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                ShowInTaskbar = false
             };
 
-            editor.ShowDialog();
+            try
+            {
+                Hide();
+                editor.ShowDialog();
+            }
+            finally
+            {
+                LoadAll();
+                RefreshViews();
 
-            LoadAll();
-            RefreshViews();
+                Show();
+                WindowState = WindowState.Normal;
+                Activate();
+            }
         }
 
         private void RenameFont_Click(object sender, RoutedEventArgs e)

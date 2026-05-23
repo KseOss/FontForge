@@ -669,6 +669,12 @@
                                        VerticalAlignment="Center"/>
                         </Viewbox>
 
+                        <Image x:Name="ExistingGlyphImage"
+                               Stretch="Uniform"
+                               IsHitTestVisible="False"
+                               Visibility="Collapsed"
+                               Opacity="1"/>
+
                         <InkCanvas x:Name="Ink"
                                    Background="Transparent"
                                    SelectionChanged="Ink_SelectionChanged"

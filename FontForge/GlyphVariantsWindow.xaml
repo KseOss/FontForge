@@ -13,79 +13,6 @@
 
     <Window.Resources>
 
-        <Style x:Key="ThemeToggleSwitchStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="70"/>
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
-                            <Border x:Name="Track"
-                                    CornerRadius="17"
-                                    Background="#D6D6D6"
-                                    BorderBrush="#B8B8B8"
-                                    BorderThickness="1"/>
-
-                            <Border x:Name="Thumb"
-                                    Width="30"
-                                    Height="30"
-                                    CornerRadius="15"
-                                    Background="White"
-                                    HorizontalAlignment="Left"
-                                    Margin="2">
-                                <Border.RenderTransform>
-                                    <TranslateTransform x:Name="ThumbTransform" X="0"/>
-                                </Border.RenderTransform>
-
-                                <TextBlock x:Name="IconText"
-                                           Text="🌙"
-                                           FontSize="16"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"/>
-                            </Border>
-                        </Grid>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter TargetName="IconText" Property="Text" Value="🔆"/>
-
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
-                                                             Storyboard.TargetProperty="X"
-                                                             To="36"
-                                                             Duration="0:0:0.18"
-                                                             AccelerationRatio="0.2"
-                                                             DecelerationRatio="0.8"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="ThumbTransform"
-                                                             Storyboard.TargetProperty="X"
-                                                             To="0"
-                                                             Duration="0:0:0.18"
-                                                             AccelerationRatio="0.2"
-                                                             DecelerationRatio="0.8"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="Padding" Value="16"/>
@@ -100,22 +27,23 @@
             <Setter Property="BorderBrush" Value="{DynamicResource MutedBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="14"/>
-            <Setter Property="Margin" Value="0,0,16,0"/>
+            <Setter Property="Margin" Value="0,0,16,16"/>
         </Style>
 
         <Style x:Key="ActionButton" TargetType="Button">
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="Margin" Value="0,8,0,0"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonTextBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Root"
-                                CornerRadius="10"
+                                CornerRadius="9"
                                 Background="{TemplateBinding Background}"
                                 Padding="10,0">
                             <ContentPresenter HorizontalAlignment="Center"
@@ -143,6 +71,8 @@
         <Style x:Key="PrimaryActionButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
             <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="FontSize" Value="13"/>
         </Style>
 
         <Style x:Key="IconButton" TargetType="Button">
@@ -177,64 +107,121 @@
             </Setter>
         </Style>
 
+        <!-- Красивый ползунок прокрутки под стиль программы -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource ButtonBackgroundBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="Transparent">
+                            <Border Width="10"
+                                    CornerRadius="5"
+                                    Background="{DynamicResource SurfaceAltBrush}"
+                                    Opacity="0.55"/>
+
+                            <Track x:Name="PART_Track"
+                                   IsDirectionReversed="True"
+                                   Margin="0">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand"
+                                                  Opacity="0"
+                                                  Focusable="False"/>
+                                </Track.DecreaseRepeatButton>
+
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border x:Name="ThumbBorder"
+                                                        Width="8"
+                                                        Margin="1"
+                                                        CornerRadius="4"
+                                                        Background="{DynamicResource ButtonBackgroundBrush}"
+                                                        Opacity="0.75"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsDragging" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand"
+                                                  Opacity="0"
+                                                  Focusable="False"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0">
+        <!-- Заголовок -->
+        <StackPanel Grid.Row="0">
+            <TextBlock x:Name="TitleText"
+                       FontSize="26"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextBrush}"/>
+
+            <TextBlock Margin="0,8,0,0"
+                       Foreground="{DynamicResource SecondaryTextBrush}">
+                <Run Text="Красная точка "/>
+                <Run Text="•" Foreground="Red" FontWeight="SemiBold"/>
+                <Run Text=" означает вариант, который будет использоваться в шрифте."/>
+            </TextBlock>
+
+            <TextBlock x:Name="CountText"
+                       Margin="0,8,0,0"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+        </StackPanel>
+
+        <!-- Карточки вариантов -->
+        <Border Grid.Row="1"
+                Margin="0,18,0,18"
+                Style="{StaticResource Card}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto"
+                          CanContentScroll="False">
+                <WrapPanel x:Name="VariantsPanel"
+                           Orientation="Horizontal"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Нижняя кнопка всегда на месте -->
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel>
-                <TextBlock x:Name="TitleText"
-                           FontSize="26"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextBrush}"/>
-
-                <TextBlock Margin="0,8,0,0"
-                           Foreground="{DynamicResource SecondaryTextBrush}">
-                    <Run Text="Красная точка "/>
-                    <Run Text="•" Foreground="Red" FontWeight="SemiBold"/>
-                    <Run Text=" означает вариант, который будет использоваться в шрифте."/>
-                </TextBlock>
-
-                <TextBlock x:Name="CountText"
-                           Margin="0,8,0,0"
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-            </StackPanel>
-
-            
-        </Grid>
-
-        <Border Grid.Row="1"
-                Margin="0,18,0,0"
-                Style="{StaticResource Card}">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal"
-                            x:Name="VariantsPanel"/>
-            </ScrollViewer>
-        </Border>
-
-        <StackPanel Grid.Row="2"
-                    Margin="0,18,0,0"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right">
-            <Button Content="Закрыть"
+            <Button Grid.Column="1"
+                    Content="Закрыть"
                     Width="140"
                     Height="44"
                     Style="{StaticResource PrimaryActionButton}"
                     Click="Close_Click"/>
-        </StackPanel>
+        </Grid>
 
         <Rectangle x:Name="FadeOverlay"
+                   Grid.RowSpan="3"
                    Fill="{DynamicResource BackgroundBrush}"
                    Opacity="0"
                    IsHitTestVisible="False"/>

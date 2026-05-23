@@ -429,15 +429,26 @@ namespace FontForge
             var win = new GlyphVariantsWindow(_font.Id, ch)
             {
                 Owner = this,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                ShowInTaskbar = false
             };
 
-            win.ShowDialog();
+            try
+            {
+                Hide();
+                win.ShowDialog();
+            }
+            finally
+            {
+                LoadFont();
+                SetPreviewInputTextFromCreatedGlyphsIfNeeded();
+                RefreshGlyphTiles();
+                RebuildPreview();
 
-            LoadFont();
-            SetPreviewInputTextFromCreatedGlyphsIfNeeded();
-            RefreshGlyphTiles();
-            RebuildPreview();
+                Show();
+                WindowState = WindowState.Normal;
+                Activate();
+            }
         }
 
         private void PreviewInput_TextChanged(object sender, TextChangedEventArgs e)
@@ -1626,10 +1637,26 @@ namespace FontForge
             var win = new DocumentEditorWindow(_font.Id)
             {
                 Owner = this,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                ShowInTaskbar = false
             };
 
-            win.ShowDialog();
+            try
+            {
+                Hide();
+                win.ShowDialog();
+            }
+            finally
+            {
+                LoadFont();
+                SetPreviewInputTextFromCreatedGlyphsIfNeeded();
+                RefreshGlyphTiles();
+                RebuildPreview();
+
+                Show();
+                WindowState = WindowState.Normal;
+                Activate();
+            }
         }
 
         private struct PointInt

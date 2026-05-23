@@ -33,13 +33,15 @@ namespace FontForge
 
         private Stroke? _curveSelectedStroke;
 
-        // Теперь это НЕ точки исходного штриха, а управляющие точки кривой
         private List<Point> _curveControlPoints = new();
 
         private WpfEllipse? _activeCurveHandle;
         private int _activeCurveControlIndex = -1;
         private Point _lastCurveDragPoint;
         private bool _curveDragChanged = false;
+
+        private bool _hasRasterUnderlay = false;
+        private string? _loadedRasterPath;
 
         public string? SavedImagePath { get; private set; }
 
@@ -69,7 +71,7 @@ namespace FontForge
 
             ApplyMode();
 
-            LoadExistingStrokesIfAny();
+            LoadExistingGlyphIfAny();
 
             PushUndoSnapshot();
 
@@ -94,23 +96,127 @@ namespace FontForge
             RebuildCurveOverlay();
         }
 
-        private void LoadExistingStrokesIfAny()
+        private void LoadExistingGlyphIfAny()
         {
             try
             {
-                string pngPath = FontStorage.BuildVariantFilePath(_fontId, _ch, _variantId);
-                string isfPath = IOPath.ChangeExtension(pngPath, ".isf");
+                string preferredPng = FontStorage.BuildVariantFilePath(_fontId, _ch, _variantId);
+                string? actualPng = FindExistingVariantImagePath();
 
-                if (File.Exists(isfPath))
+                if (string.IsNullOrWhiteSpace(actualPng))
+                    actualPng = preferredPng;
+
+                string actualIsf = IOPath.ChangeExtension(actualPng, ".isf");
+                string preferredIsf = IOPath.ChangeExtension(preferredPng, ".isf");
+
+                if (File.Exists(actualIsf))
                 {
-                    using var fs = new FileStream(isfPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    Ink.Strokes = new StrokeCollection(fs);
+                    StrokeCollection strokes;
+
+                    using (var fs = new FileStream(actualIsf, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        strokes = new StrokeCollection(fs);
+                    }
+
+                    if (strokes.Count > 0)
+                    {
+                        Ink.Strokes = strokes;
+                        HideRasterUnderlay();
+                        return;
+                    }
+                }
+
+                if (File.Exists(preferredIsf) && !string.Equals(preferredIsf, actualIsf, StringComparison.OrdinalIgnoreCase))
+                {
+                    StrokeCollection strokes;
+
+                    using (var fs = new FileStream(preferredIsf, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        strokes = new StrokeCollection(fs);
+                    }
+
+                    if (strokes.Count > 0)
+                    {
+                        Ink.Strokes = strokes;
+                        HideRasterUnderlay();
+                        return;
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(actualPng) && File.Exists(actualPng))
+                {
+                    LoadRasterUnderlay(actualPng);
                 }
             }
             catch
             {
-                // Если ISF не прочитался, открываем пустой холст.
             }
+        }
+
+        private string? FindExistingVariantImagePath()
+        {
+            try
+            {
+                List<CreatedFont> fonts = FontStorage.LoadFonts();
+
+                CreatedFont? font = fonts.FirstOrDefault(f => f.Id == _fontId);
+
+                if (font == null || font.Glyphs == null)
+                    return null;
+
+                GlyphEntry? glyph = font.Glyphs.FirstOrDefault(g => g.Char == _ch);
+
+                if (glyph == null || glyph.Variants == null)
+                    return null;
+
+                GlyphVariant? variant = glyph.Variants.FirstOrDefault(v => v.Id == _variantId);
+
+                if (variant == null)
+                    return null;
+
+                if (!string.IsNullOrWhiteSpace(variant.ImagePath) && File.Exists(variant.ImagePath))
+                    return variant.ImagePath;
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private void LoadRasterUnderlay(string imagePath)
+        {
+            try
+            {
+                var bitmap = new BitmapImage();
+
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+                bitmap.UriSource = new Uri(imagePath, UriKind.Absolute);
+                bitmap.EndInit();
+                bitmap.Freeze();
+
+                ExistingGlyphImage.Source = bitmap;
+                ExistingGlyphImage.Visibility = Visibility.Visible;
+
+                _hasRasterUnderlay = true;
+                _loadedRasterPath = imagePath;
+            }
+            catch
+            {
+                HideRasterUnderlay();
+            }
+        }
+
+        private void HideRasterUnderlay()
+        {
+            ExistingGlyphImage.Source = null;
+            ExistingGlyphImage.Visibility = Visibility.Collapsed;
+
+            _hasRasterUnderlay = false;
+            _loadedRasterPath = null;
         }
 
         private void Ink_PreviewMouseDown_ForceMode(object sender, MouseButtonEventArgs e)
@@ -378,7 +484,6 @@ namespace FontForge
             }
             catch
             {
-                // ignore
             }
 
             return Color.FromRgb(90, 90, 90);
@@ -467,7 +572,6 @@ namespace FontForge
         private void ApplyEraser()
         {
             double size = Math.Max(4, EraserSizeSlider.Value);
-
             Ink.EraserShape = new EllipseStylusShape(size, size);
         }
 
@@ -546,6 +650,7 @@ namespace FontForge
             Ink.Strokes.Clear();
             Ink.Select(new StrokeCollection());
 
+            HideRasterUnderlay();
             ClearCurveSelection();
 
             PushUndoSnapshot();
@@ -594,10 +699,6 @@ namespace FontForge
                 Ink.Select(new StrokeCollection());
             }
         }
-
-        // =========================
-        // КОРРЕКЦИЯ КРИВОЙ
-        // =========================
 
         private void CurveEditCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -1102,25 +1203,38 @@ namespace FontForge
                 accent.B));
         }
 
-        // =========================
-        // СОХРАНЕНИЕ
-        // =========================
-
         private void Save_Click(object sender, RoutedEventArgs e)
         {
+            if (Ink.Strokes.Count == 0 && !_hasRasterUnderlay)
+            {
+                AppDialog.Warning(this, "Сначала нарисуйте символ или загрузите изображение символа.");
+                return;
+            }
+
             FontStorage.EnsureFolders(_fontId);
 
             string preferredPng = FontStorage.BuildVariantFilePath(_fontId, _ch, _variantId);
             string preferredIsf = IOPath.ChangeExtension(preferredPng, ".isf");
 
-            SafeWriteIsf(preferredIsf);
+            if (!_hasRasterUnderlay)
+            {
+                SafeWriteIsf(preferredIsf);
+            }
 
             string finalPng = SafeWriteTransparentPng(preferredPng);
 
-            if (!string.Equals(finalPng, preferredPng, StringComparison.OrdinalIgnoreCase))
+            if (_hasRasterUnderlay)
             {
-                string finalIsf = IOPath.ChangeExtension(finalPng, ".isf");
-                SafeWriteIsf(finalIsf);
+                DeleteIsfIfExists(preferredIsf);
+                DeleteIsfIfExists(IOPath.ChangeExtension(finalPng, ".isf"));
+            }
+            else
+            {
+                if (!string.Equals(finalPng, preferredPng, StringComparison.OrdinalIgnoreCase))
+                {
+                    string finalIsf = IOPath.ChangeExtension(finalPng, ".isf");
+                    SafeWriteIsf(finalIsf);
+                }
             }
 
             SavedImagePath = finalPng;
@@ -1144,7 +1258,18 @@ namespace FontForge
             }
             catch
             {
-                // ISF не обязателен для PNG.
+            }
+        }
+
+        private void DeleteIsfIfExists(string path)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                    File.Delete(path);
+            }
+            catch
+            {
             }
         }
 
@@ -1160,13 +1285,15 @@ namespace FontForge
             GuideLinesCanvas.Visibility = Visibility.Collapsed;
             CurveEditCanvas.Visibility = Visibility.Collapsed;
 
-            Ink.UpdateLayout();
+            Ink.Select(new StrokeCollection());
 
-            int width = (int)Math.Max(1, Ink.ActualWidth);
-            int height = (int)Math.Max(1, Ink.ActualHeight);
+            WorkGrid.UpdateLayout();
+
+            int width = (int)Math.Max(1, WorkGrid.ActualWidth);
+            int height = (int)Math.Max(1, WorkGrid.ActualHeight);
 
             var rtb = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-            rtb.Render(Ink);
+            rtb.Render(WorkGrid);
 
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(rtb));
@@ -1200,7 +1327,6 @@ namespace FontForge
                 }
                 catch
                 {
-                    // ignore
                 }
 
                 return alt;
