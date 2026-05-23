@@ -186,11 +186,7 @@ namespace FontForge
                     pdfLeftIndent,
                     pdfFirstLineIndent);
 
-                MessageBox.Show(
-                    "PDF успешно сохранён.",
-                    "PDF",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                AppDialog.Success(this, "PDF успешно сохранён.", "PDF");
             }
             catch (Exception ex)
             {
