@@ -51,6 +51,8 @@ namespace FontForge
             ApplyEraser();
 
             ModeDrawRadio.IsChecked = true;
+            BrushNormalRadio.IsChecked = true;
+
             ApplyMode();
 
             LoadExistingStrokesIfAny();
@@ -58,6 +60,7 @@ namespace FontForge
             PushUndoSnapshot();
 
             UpdatePrettySliderFill(BrushSizeSlider);
+            UpdatePrettySliderFill(CalligraphyAngleSlider);
             UpdatePrettySliderFill(EraserSizeSlider);
         }
 
@@ -67,7 +70,9 @@ namespace FontForge
                 return;
 
             DrawGuides();
+
             UpdatePrettySliderFill(BrushSizeSlider);
+            UpdatePrettySliderFill(CalligraphyAngleSlider);
             UpdatePrettySliderFill(EraserSizeSlider);
         }
 
@@ -112,6 +117,17 @@ namespace FontForge
                 return;
 
             ApplyMode();
+        }
+
+        private void BrushTypeRadio_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!_uiReady)
+                return;
+
+            ApplyBrush();
+
+            if (ModeDrawRadio.IsChecked == true)
+                ApplyMode();
         }
 
         private void ApplyMode()
@@ -321,7 +337,9 @@ namespace FontForge
                 return;
 
             ApplyBrush();
+
             UpdatePrettySliderFill(BrushSizeSlider);
+            UpdatePrettySliderFill(CalligraphyAngleSlider);
         }
 
         private void EraserSettings_Changed(object sender, RoutedEventArgs e)
@@ -335,16 +353,49 @@ namespace FontForge
 
         private void ApplyBrush()
         {
-            double final = Math.Max(1, BrushSizeSlider.Value);
+            double size = Math.Max(1, BrushSizeSlider.Value);
 
-            Ink.DefaultDrawingAttributes = new DrawingAttributes
+            if (BrushCalligraphyRadio != null && BrushCalligraphyRadio.IsChecked == true)
             {
-                Color = Colors.Black,
-                Width = final,
-                Height = final,
-                FitToCurve = true,
-                IgnorePressure = true
-            };
+                double angle = CalligraphyAngleSlider?.Value ?? -35;
+                double radians = angle * Math.PI / 180.0;
+
+                double cos = Math.Cos(radians);
+                double sin = Math.Sin(radians);
+
+                var attributes = new DrawingAttributes
+                {
+                    Color = Colors.Black,
+                    Width = size * 1.95,
+                    Height = Math.Max(2, size * 0.45),
+                    FitToCurve = true,
+                    IgnorePressure = true,
+                    StylusTip = StylusTip.Ellipse
+                };
+
+                attributes.StylusTipTransform = new Matrix(
+                    cos,
+                    sin,
+                    -sin,
+                    cos,
+                    0,
+                    0);
+
+                Ink.DefaultDrawingAttributes = attributes;
+            }
+            else
+            {
+                Ink.DefaultDrawingAttributes = new DrawingAttributes
+                {
+                    Color = Colors.Black,
+                    Width = size,
+                    Height = size,
+                    FitToCurve = true,
+                    IgnorePressure = true,
+                    StylusTip = StylusTip.Ellipse,
+                    StylusTipTransform = Matrix.Identity
+                };
+            }
         }
 
         private void ApplyEraser()

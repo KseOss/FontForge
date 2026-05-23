@@ -361,6 +361,31 @@
 
                         <Border Style="{StaticResource SettingsBlock}">
                             <StackPanel>
+                                <TextBlock Text="Тип кисти"
+                                           Style="{StaticResource SectionTitle}"/>
+
+                                <RadioButton x:Name="BrushNormalRadio"
+                                             Style="{StaticResource AppRadioButton}"
+                                             Content="Обычная круглая кисть"
+                                             IsChecked="True"
+                                             Checked="BrushTypeRadio_Checked"
+                                             Margin="0,0,0,10"/>
+
+                                <RadioButton x:Name="BrushCalligraphyRadio"
+                                             Style="{StaticResource AppRadioButton}"
+                                             Content="Каллиграфическая кисть"
+                                             Checked="BrushTypeRadio_Checked"/>
+
+                                <TextBlock Text="Каллиграфическая кисть пишет как перо: линия получается с наклоном и разной толщиной."
+                                           Margin="0,10,0,0"
+                                           TextWrapping="Wrap"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource SettingsBlock}">
+                            <StackPanel>
                                 <TextBlock Text="Действия"
                                            Style="{StaticResource SectionTitle}"/>
 
@@ -419,6 +444,36 @@
                                         Maximum="36"
                                         Value="12"
                                         ValueChanged="BrushSettings_Changed"/>
+
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Наклон пера"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding ElementName=CalligraphyAngleSlider, Path=Value, StringFormat={}{0:0}°}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontSize="13"/>
+                                </Grid>
+
+                                <Slider x:Name="CalligraphyAngleSlider"
+                                        Style="{StaticResource PrettySlider}"
+                                        Minimum="-70"
+                                        Maximum="70"
+                                        Value="-35"
+                                        TickFrequency="1"
+                                        ValueChanged="BrushSettings_Changed"/>
+
+                                <TextBlock Text="Наклон используется только для каллиграфической кисти."
+                                           Margin="0,8,0,0"
+                                           TextWrapping="Wrap"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </StackPanel>
                         </Border>
 
@@ -504,7 +559,7 @@
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextBrush}"/>
 
-                        <TextBlock Text="Рисование — создание линий, ластик — стирание частей линий."
+                        <TextBlock Text="Выберите тип кисти: обычную или каллиграфическую."
                                    Margin="0,4,0,0"
                                    FontSize="12"
                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
