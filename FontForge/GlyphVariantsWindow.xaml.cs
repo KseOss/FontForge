@@ -38,13 +38,13 @@ namespace FontForge
 
         private void Window_Closed(object? sender, EventArgs e)
         {
+            // Ничего не делаем.
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }
-
 
         private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
         {
@@ -53,12 +53,10 @@ namespace FontForge
 
             _isThemeAnimating = true;
 
-
             var fadeTo = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140));
 
             fadeTo.Completed += (_, __) =>
             {
-
                 var fadeBack = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(180));
 
                 fadeBack.Completed += (___, ____) =>
@@ -79,7 +77,7 @@ namespace FontForge
 
             if (_font == null)
             {
-                MessageBox.Show("Шрифт не найден.");
+                AppDialog.Warning(this, "Шрифт не найден.");
                 Close();
                 return;
             }
@@ -353,7 +351,8 @@ namespace FontForge
 
             var editor = new GlyphEditorWindow(_font.Id, _ch, variant.Id)
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             if (editor.ShowDialog() == true)
@@ -391,7 +390,8 @@ namespace FontForge
 
             var editor = new GlyphEditorWindow(_font.Id, _ch, variant.Id)
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             if (editor.ShowDialog() == true)
@@ -500,11 +500,12 @@ namespace FontForge
             if (variant == null)
                 return;
 
-            MessageBoxResult result = MessageBox.Show(
-                "Удалить этот вариант буквы?",
+            MessageBoxResult result = AppDialog.Show(
+                this,
                 "Подтверждение",
+                "Удалить этот вариант буквы?",
                 MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                AppDialogKind.Warning);
 
             if (result != MessageBoxResult.Yes)
                 return;

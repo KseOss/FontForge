@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FontForge.Classes;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -6,7 +7,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-using FontForge.Classes;
 
 namespace FontForge
 {
@@ -62,14 +62,32 @@ namespace FontForge
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            BeginAnimation(OpacityProperty, new DoubleAnimation(1, TimeSpan.FromMilliseconds(220)));
+            BeginAnimation(
+                OpacityProperty,
+                new DoubleAnimation
+                {
+                    From = 0,
+                    To = 1,
+                    Duration = TimeSpan.FromMilliseconds(220),
+                    EasingFunction = new QuadraticEase
+                    {
+                        EasingMode = EasingMode.EaseOut
+                    }
+                });
+        }
+
+        private void Window_Closed(object? sender, EventArgs e)
+        {
+            // Ничего не делаем.
+            // Главное окно само вернётся через событие Closed в MainWindow.
         }
 
         private void OpenSettings_Click(object sender, RoutedEventArgs e)
         {
             var settingsWindow = new ThemeSettingsWindow
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             settingsWindow.ShowDialog();
@@ -79,7 +97,8 @@ namespace FontForge
         {
             var dialog = new CreateFontNameDialog
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             bool? ok = dialog.ShowDialog();
@@ -97,7 +116,7 @@ namespace FontForge
 
             if (_allFonts.Any(f => !f.IsDeleted && string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)))
             {
-                MessageBox.Show("Шрифт с таким названием уже существует.");
+                AppDialog.Warning(this, "Шрифт с таким названием уже существует.");
                 return;
             }
 
@@ -141,13 +160,14 @@ namespace FontForge
 
             if (found.IsDeleted)
             {
-                MessageBox.Show("Этот шрифт находится в корзине. Сначала восстановите его.");
+                AppDialog.Warning(this, "Этот шрифт находится в корзине. Сначала восстановите его.");
                 return;
             }
 
             var editor = new FontEditorWindow(found.Id)
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             editor.ShowDialog();
@@ -174,7 +194,8 @@ namespace FontForge
 
             var dialog = new CreateFontNameDialog(found.Name, true)
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             bool? ok = dialog.ShowDialog();

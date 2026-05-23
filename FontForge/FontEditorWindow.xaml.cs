@@ -26,6 +26,7 @@ namespace FontForge
         public FontEditorWindow(Guid fontId)
         {
             InitializeComponent();
+
             DataContext = this;
 
             _fontId = fontId;
@@ -63,7 +64,6 @@ namespace FontForge
 
             _isThemeAnimating = true;
 
-
             var fadeTo = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140));
 
             fadeTo.Completed += (_, __) =>
@@ -88,7 +88,7 @@ namespace FontForge
 
             if (_font == null)
             {
-                MessageBox.Show("Шрифт не найден.");
+                AppDialog.Warning(this, "Шрифт не найден.");
                 Close();
                 return;
             }
@@ -155,7 +155,8 @@ namespace FontForge
 
             var dialog = new SelectLetterDialog(used)
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             if (dialog.ShowDialog() != true)
@@ -198,7 +199,8 @@ namespace FontForge
 
             var win = new GlyphVariantsWindow(_font.Id, ch)
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             win.ShowDialog();
@@ -419,11 +421,7 @@ namespace FontForge
         {
             if (_font == null)
             {
-                MessageBox.Show(
-                    "Шрифт не загружен.",
-                    "Экспорт шрифта",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                AppDialog.Warning(this, "Шрифт не загружен.", "Экспорт шрифта");
                 return;
             }
 
@@ -459,19 +457,11 @@ namespace FontForge
                         "\n\nНекоторые символы могли быть пропущены, если у них не найден .isf-файл с контурами.";
                 }
 
-                MessageBox.Show(
-                    message,
-                    "Экспорт шрифта",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                AppDialog.Success(this, message, "Экспорт шрифта");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    "Ошибка при экспорте шрифта:\n" + ex.Message,
-                    "Экспорт шрифта",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                AppDialog.Error(this, "Ошибка при экспорте шрифта:\n" + ex.Message, "Экспорт шрифта");
             }
         }
 
@@ -494,13 +484,14 @@ namespace FontForge
         {
             if (_font == null)
             {
-                MessageBox.Show("Шрифт не загружен.");
+                AppDialog.Warning(this, "Шрифт не загружен.");
                 return;
             }
 
             var win = new DocumentEditorWindow(_font.Id)
             {
-                Owner = this
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
 
             win.ShowDialog();

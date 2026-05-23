@@ -9,14 +9,25 @@ namespace FontForge.AboutMessage
         public AboutWindow1()
         {
             InitializeComponent();
+
             Height += 20;
             Width += 20;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Плавное появление
-            BeginAnimation(OpacityProperty, new DoubleAnimation(1, TimeSpan.FromMilliseconds(220)));
+            BeginAnimation(
+                OpacityProperty,
+                new DoubleAnimation
+                {
+                    From = 0,
+                    To = 1,
+                    Duration = TimeSpan.FromMilliseconds(220),
+                    EasingFunction = new QuadraticEase
+                    {
+                        EasingMode = EasingMode.EaseOut
+                    }
+                });
         }
 
         private void NextButton_Click(object sender, RoutedEventArgs e)
@@ -24,24 +35,32 @@ namespace FontForge.AboutMessage
             NavigateTo(new AboutWindow2());
         }
 
-       
-
         private void NavigateTo(Window next)
         {
-            var fadeOut = new DoubleAnimation(0, TimeSpan.FromMilliseconds(160));
+            var fadeOut = new DoubleAnimation
+            {
+                From = 1,
+                To = 0,
+                Duration = TimeSpan.FromMilliseconds(160),
+                EasingFunction = new QuadraticEase
+                {
+                    EasingMode = EasingMode.EaseIn
+                }
+            };
+
             fadeOut.Completed += (_, __) =>
             {
-                next.Owner = this.Owner;
-                next.Show();
-                this.Close();
-            };
-            BeginAnimation(OpacityProperty, fadeOut);
-        }
+                next.Owner = Owner;
+                next.Opacity = 0;
+                next.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
-        private void FadeClose()
-        {
-            var fadeOut = new DoubleAnimation(0, TimeSpan.FromMilliseconds(160));
-            fadeOut.Completed += (_, __) => Close();
+                Hide();
+
+                next.ShowDialog();
+
+                Close();
+            };
+
             BeginAnimation(OpacityProperty, fadeOut);
         }
     }
